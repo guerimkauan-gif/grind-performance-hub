@@ -57,10 +57,10 @@ const DASH_STYLES = `
 .grind-trend-bar:hover .grind-trend-tip { opacity: 1; }
 `;
 
-function SectionLabel({ children, pulse }: { children: React.ReactNode; pulse?: boolean }) {
+function SectionLabel({ children }: { children: React.ReactNode; pulse?: boolean }) {
   return (
     <div style={LABEL}>
-      <span className={pulse ? "grind-pulse-dot" : ""} style={{ color: "#E8003D", marginRight: 8 }}>●</span>
+      <span className="grind-pulse-dot" style={{ color: "#E8003D", marginRight: 8 }}>●</span>
       {children}
     </div>
   );
