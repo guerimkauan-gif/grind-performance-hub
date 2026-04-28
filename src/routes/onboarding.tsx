@@ -148,7 +148,7 @@ function OnboardingPage() {
                 }}
               />
             </div>
-            <button style={{ ...PRIMARY_BTN, opacity: dream.trim().length < 10 ? 0.4 : 1 }} disabled={dream.trim().length < 10} onClick={() => setStep(2)}>
+            <button style={{ ...PRIMARY_BTN, filter: dream.trim().length < 10 ? "brightness(0.5)" : "none" }} disabled={dream.trim().length < 10} onClick={() => setStep(2)}>
               CONTINUAR
             </button>
           </div>
@@ -172,7 +172,7 @@ function OnboardingPage() {
               </FormField>
             </div>
 
-            <button style={{ ...PRIMARY_BTN, opacity: !hours || !days || !deadline ? 0.4 : 1 }} disabled={!hours || !days || !deadline} onClick={() => setStep(3)}>
+            <button style={{ ...PRIMARY_BTN, filter: !hours || !days || !deadline ? "brightness(0.5)" : "none" }} disabled={!hours || !days || !deadline} onClick={() => setStep(3)}>
               CONTINUAR
             </button>
           </div>
@@ -224,7 +224,7 @@ function OnboardingPage() {
             </div>
 
             {error && <div style={{ color: "#E8003D", fontSize: 13, marginBottom: 16 }}>{error}</div>}
-            <button style={{ ...PRIMARY_BTN, opacity: saving ? 0.5 : 1 }} onClick={finish} disabled={saving}>
+            <button style={{ ...PRIMARY_BTN, filter: saving ? "brightness(0.6)" : "none" }} onClick={finish} disabled={saving}>
               {saving ? "..." : "IR PARA O DASHBOARD"}
             </button>
           </div>
