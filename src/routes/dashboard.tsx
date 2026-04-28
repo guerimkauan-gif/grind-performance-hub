@@ -566,6 +566,9 @@ function SectionObjetivo({ profile, userId, onSaved }: { profile: Profile | null
   const [deadline, setDeadline] = useState<string>(profile?.deadline ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editingGoal, setEditingGoal] = useState(false);
+  const [goalDraft, setGoalDraft] = useState<string>("");
+  const [savingGoal, setSavingGoal] = useState(false);
 
   useEffect(() => {
     setHours(profile?.daily_hours?.toString() ?? "");
