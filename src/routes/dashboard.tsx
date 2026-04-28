@@ -18,10 +18,37 @@ const LABEL: React.CSSProperties = {
 
 const SEP: React.CSSProperties = { height: 1, background: "#2A2A2A", margin: "12px 0 16px" };
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+const DASH_STYLES = `
+@keyframes grind-ring-draw { from { stroke-dashoffset: var(--ring-circ); } to { stroke-dashoffset: var(--ring-target); } }
+@keyframes grind-bar-fill { from { width: 0%; } to { width: var(--bar-target); } }
+@keyframes grind-pulse-dot { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: 0.6; } }
+@keyframes grind-check-pop { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+@keyframes grind-strike { from { width: 0%; } to { width: 100%; } }
+.dash-logout:hover { border-color: #E8003D !important; color: #FFFFFF !important; }
+.grind-ring-arc { animation: grind-ring-draw 1.2s ease-out forwards; }
+.grind-bar-fill { animation: grind-bar-fill 0.8s ease-out forwards; }
+.grind-pulse-dot { display: inline-block; animation: grind-pulse-dot 2s ease-in-out infinite; }
+.grind-check-pop { animation: grind-check-pop 150ms ease-out; }
+.grind-strike-wrap { position: relative; display: inline-block; }
+.grind-strike-wrap::after {
+  content: ""; position: absolute; left: 0; top: 50%; height: 1px; background: currentColor;
+  width: 0%;
+}
+.grind-strike-wrap.on::after { animation: grind-strike 200ms ease-out forwards; }
+.grind-trend-bar { position: relative; cursor: pointer; }
+.grind-trend-tip {
+  position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  background: #1A1A1A; border: 1px solid #2A2A2A; color: #FFFFFF;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 4px 8px;
+  white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s;
+}
+.grind-trend-bar:hover .grind-trend-tip { opacity: 1; }
+`;
+
+function SectionLabel({ children, pulse }: { children: React.ReactNode; pulse?: boolean }) {
   return (
     <div style={LABEL}>
-      <span style={{ color: "#E8003D", marginRight: 8 }}>●</span>
+      <span className={pulse ? "grind-pulse-dot" : ""} style={{ color: "#E8003D", marginRight: 8 }}>●</span>
       {children}
     </div>
   );
@@ -42,6 +69,7 @@ function DashboardPage() {
     { label: "Revisão de flashcards", done: true },
     { label: "Dormir antes das 23h", done: false },
   ]);
+  const [popKey, setPopKey] = useState<Record<number, number>>({});
 
   useEffect(() => {
     if (loading) return;
@@ -56,12 +84,19 @@ function DashboardPage() {
     navigate({ to: "/login" });
   };
 
+  const toggleTask = (i: number) => {
+    setTasks((prev) => prev.map((x, idx) => idx === i ? { ...x, done: !x.done } : x));
+    setPopKey((p) => ({ ...p, [i]: (p[i] || 0) + 1 }));
+  };
+
   const completed = tasks.filter((t) => t.done).length;
 
   return (
     <div style={{ background: "#0A0A0A", minHeight: "100vh", color: "#FFFFFF" }}>
+      <style>{DASH_STYLES}</style>
+
       {/* Top bar */}
-      <header style={{ height: 56, borderBottom: "1px solid #2A2A2A", padding: "0 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <header style={{ height: 56, borderBottom: "1px solid #2A2A2A", boxShadow: "0 1px 0 #E8003D20", padding: "0 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <GrindLogo height={28} />
         <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "#A0A0A0", textTransform: "uppercase", letterSpacing: "0.05em" }}>
           {formatToday()}
@@ -87,8 +122,6 @@ function DashboardPage() {
         </button>
       </header>
 
-      <style>{`.dash-logout:hover { border-color: #E8003D !important; color: #FFFFFF !important; }`}</style>
-
       {/* Main */}
       <main style={{ maxWidth: 1280, margin: "0 auto", padding: 32, display: "grid", gridTemplateColumns: "65fr 35fr", gap: 24 }}>
         {/* LEFT */}
@@ -97,10 +130,9 @@ function DashboardPage() {
           <section>
             <SectionLabel>SCORE DO OBJETIVO</SectionLabel>
             <div style={SEP} />
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 96, color: "#E8003D", lineHeight: 1 }}>87</div>
-            <div style={{ ...LABEL, color: "#555555", marginTop: 8 }}>ADERÊNCIA AO PLANO</div>
-            <div style={{ height: 2, background: "#1A1A1A", marginTop: 16 }}>
-              <div style={{ height: "100%", width: "87%", background: "#E8003D" }} />
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 12 }}>
+              <ScoreRing value={87} />
+              <div style={{ ...LABEL, color: "#555555" }}>ADERÊNCIA AO PLANO</div>
             </div>
             <p style={{ fontSize: 13, color: "#A0A0A0", marginTop: 16, lineHeight: 1.6 }}>
               No ritmo atual você completa o plano 3 dias antes do prazo.
@@ -111,7 +143,7 @@ function DashboardPage() {
           <section>
             <SectionLabel>PLANO DO DIA</SectionLabel>
             <div style={SEP} />
-            <p style={{ fontSize: 15, color: "#FFFFFF", lineHeight: 1.6, marginBottom: 24 }}>
+            <p style={{ fontSize: 15, color: "#FFFFFF", lineHeight: 1.6, marginBottom: 24, borderLeft: "2px solid #E8003D", paddingLeft: 16 }}>
               Seu corpo está bem recuperado hoje. HRV estável indica mente apta para foco profundo.
             </p>
             {[
@@ -137,7 +169,9 @@ function DashboardPage() {
               {tasks.map((t, i) => (
                 <label key={i} style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
                   <span
-                    onClick={() => setTasks((prev) => prev.map((x, idx) => idx === i ? { ...x, done: !x.done } : x))}
+                    key={`box-${i}-${popKey[i] || 0}`}
+                    onClick={() => toggleTask(i)}
+                    className={popKey[i] ? "grind-check-pop" : ""}
                     style={{
                       width: 18,
                       height: 18,
@@ -153,7 +187,10 @@ function DashboardPage() {
                   >
                     {t.done ? "✓" : ""}
                   </span>
-                  <span style={{ fontSize: 14, color: t.done ? "#555555" : "#FFFFFF", textDecoration: t.done ? "line-through" : "none" }}>
+                  <span
+                    className={`grind-strike-wrap ${t.done ? "on" : ""}`}
+                    style={{ fontSize: 14, color: t.done ? "#555555" : "#FFFFFF" }}
+                  >
                     {t.label}
                   </span>
                 </label>
@@ -169,7 +206,7 @@ function DashboardPage() {
         <div style={{ display: "grid", gap: 32, alignContent: "start" }}>
           {/* Block 4 — Métricas */}
           <section>
-            <SectionLabel>CORPO · HOJE</SectionLabel>
+            <SectionLabel pulse>CORPO · HOJE</SectionLabel>
             <div style={SEP} />
             <div style={{ display: "grid", gap: 20 }}>
               <Metric name="RECOVERY" value="87" unit="%" pct={87} />
@@ -201,6 +238,37 @@ function DashboardPage() {
   );
 }
 
+function ScoreRing({ value }: { value: number }) {
+  const size = 160;
+  const stroke = 8;
+  const r = (size - stroke) / 2;
+  const circ = 2 * Math.PI * r;
+  const target = circ * (1 - value / 100);
+  return (
+    <div style={{ position: "relative", width: size, height: size }}>
+      <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#1A1A1A" strokeWidth={stroke} />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="#E8003D"
+          strokeWidth={stroke}
+          strokeLinecap="square"
+          strokeDasharray={circ}
+          className="grind-ring-arc"
+          style={{ ["--ring-circ" as never]: `${circ}px`, ["--ring-target" as never]: `${target}px` }}
+        />
+      </svg>
+      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>
+        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 48, color: "#E8003D" }}>{value}</span>
+        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, color: "#555555", marginTop: 4 }}>%</span>
+      </div>
+    </div>
+  );
+}
+
 function Metric({ name, value, unit, pct }: { name: string; value: string; unit?: string; pct: number }) {
   return (
     <div style={{ paddingBottom: 16, borderBottom: "1px solid #2A2A2A" }}>
@@ -210,7 +278,10 @@ function Metric({ name, value, unit, pct }: { name: string; value: string; unit?
         {unit && <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "#555555" }}>{unit}</span>}
       </div>
       <div style={{ height: 2, background: "#1A1A1A" }}>
-        <div style={{ height: "100%", width: `${pct}%`, background: "#E8003D" }} />
+        <div
+          className="grind-bar-fill"
+          style={{ height: "100%", background: "#E8003D", width: 0, ["--bar-target" as never]: `${pct}%` }}
+        />
       </div>
     </div>
   );
@@ -222,22 +293,26 @@ function Trend() {
   const max = Math.max(...data);
   const maxIdx = data.indexOf(max);
   const todayIdx = data.length - 1;
+  const H = 100;
   return (
     <div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6, alignItems: "end", height: 80 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6, alignItems: "end", height: H, borderBottom: "1px solid #2A2A2A" }}>
         {data.map((v, i) => {
-          const h = (v / 100) * 80;
+          const h = (v / 100) * H;
           const isMax = i === maxIdx;
           const isToday = i === todayIdx;
+          let bg = "#2A2A2A";
+          let border = "none";
+          if (isToday) {
+            bg = "rgba(232, 0, 61, 0.3)";
+            border = "1px solid #E8003D";
+          } else if (isMax) {
+            bg = "#E8003D";
+          }
           return (
-            <div
-              key={i}
-              style={{
-                height: h,
-                background: isMax ? "#E8003D" : "#2A2A2A",
-                border: isToday && !isMax ? "1px solid #E8003D" : "none",
-              }}
-            />
+            <div key={i} className="grind-trend-bar" style={{ height: h, background: bg, border }}>
+              <span className="grind-trend-tip">{v}%</span>
+            </div>
           );
         })}
       </div>
