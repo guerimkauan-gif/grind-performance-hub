@@ -174,6 +174,7 @@ const ICONS: Record<SectionKey, () => React.ReactElement> = {
 
 type Profile = {
   dream: string | null;
+  goal_name: string | null;
   daily_hours: number | null;
   days_per_week: number | null;
   deadline: string | null;
@@ -194,10 +195,10 @@ function DashboardPage() {
   useEffect(() => {
     if (loading) return;
     if (!session) { navigate({ to: "/login" }); return; }
-    supabase.from("profiles").select("onboarding_complete,dream,daily_hours,days_per_week,deadline,created_at").eq("id", session.user.id).maybeSingle().then(({ data }) => {
+    supabase.from("profiles").select("onboarding_complete,dream,goal_name,daily_hours,days_per_week,deadline,created_at").eq("id", session.user.id).maybeSingle().then(({ data }) => {
       if (!data?.onboarding_complete) { navigate({ to: "/onboarding" }); return; }
       setProfile({
-        dream: data.dream, daily_hours: data.daily_hours, days_per_week: data.days_per_week,
+        dream: data.dream, goal_name: data.goal_name, daily_hours: data.daily_hours, days_per_week: data.days_per_week,
         deadline: data.deadline, created_at: data.created_at,
       });
     });
@@ -604,9 +605,14 @@ function SectionObjetivo({ profile, userId, onSaved }: { profile: Profile | null
         <SectionLabel>SEU SONHO</SectionLabel>
         <div style={SEP} />
         <div style={{ borderLeft: "3px solid #E8003D", paddingLeft: 20 }}>
-          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 400, fontSize: 20, color: "#FFFFFF", lineHeight: 1.6, margin: 0 }}>
-            {profile?.dream || "—"}
-          </p>
+          <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 28, color: "#FFFFFF", lineHeight: 1.2, margin: 0 }}>
+            {profile?.goal_name || "—"}
+          </div>
+          {profile?.dream && (
+            <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 400, fontSize: 15, color: "#A0A0A0", lineHeight: 1.6, margin: "12px 0 0 0" }}>
+              {profile.dream}
+            </p>
+          )}
         </div>
         <div style={{ fontSize: 11, color: "#555555", textTransform: "uppercase", letterSpacing: "0.12em", marginTop: 12 }}>
           Definido no seu onboarding

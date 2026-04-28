@@ -74,6 +74,7 @@ export type Database = {
           days_per_week: number | null
           deadline: string | null
           dream: string | null
+          goal_name: string | null
           id: string
           onboarding_complete: boolean
           whoop_access_token: string | null
@@ -86,6 +87,7 @@ export type Database = {
           days_per_week?: number | null
           deadline?: string | null
           dream?: string | null
+          goal_name?: string | null
           id: string
           onboarding_complete?: boolean
           whoop_access_token?: string | null
@@ -98,6 +100,7 @@ export type Database = {
           days_per_week?: number | null
           deadline?: string | null
           dream?: string | null
+          goal_name?: string | null
           id?: string
           onboarding_complete?: boolean
           whoop_access_token?: string | null
