@@ -41,10 +41,11 @@ const BODY: React.CSSProperties = {
 };
 
 const PRIMARY_BTN: React.CSSProperties = {
-  background: "#E8003D",
+  backgroundColor: "#E8003D",
   color: "#FFFFFF",
   height: 52,
   border: "none",
+  borderRadius: 0,
   fontFamily: "'Space Grotesk', sans-serif",
   fontWeight: 700,
   fontSize: 12,
