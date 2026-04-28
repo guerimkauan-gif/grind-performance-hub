@@ -174,6 +174,7 @@ const ICONS: Record<SectionKey, () => React.ReactElement> = {
 
 type Profile = {
   dream: string | null;
+  goal_name: string | null;
   daily_hours: number | null;
   days_per_week: number | null;
   deadline: string | null;
