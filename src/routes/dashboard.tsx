@@ -605,9 +605,14 @@ function SectionObjetivo({ profile, userId, onSaved }: { profile: Profile | null
         <SectionLabel>SEU SONHO</SectionLabel>
         <div style={SEP} />
         <div style={{ borderLeft: "3px solid #E8003D", paddingLeft: 20 }}>
-          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 400, fontSize: 20, color: "#FFFFFF", lineHeight: 1.6, margin: 0 }}>
-            {profile?.dream || "—"}
-          </p>
+          <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 28, color: "#FFFFFF", lineHeight: 1.2, margin: 0 }}>
+            {profile?.goal_name || "—"}
+          </div>
+          {profile?.dream && (
+            <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 400, fontSize: 15, color: "#A0A0A0", lineHeight: 1.6, margin: "12px 0 0 0" }}>
+              {profile.dream}
+            </p>
+          )}
         </div>
         <div style={{ fontSize: 11, color: "#555555", textTransform: "uppercase", letterSpacing: "0.12em", marginTop: 12 }}>
           Definido no seu onboarding
