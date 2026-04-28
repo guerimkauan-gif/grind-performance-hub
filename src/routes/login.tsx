@@ -53,7 +53,7 @@ function LoginPage() {
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "#0A0A0A" }}>
       <div style={{ width: "100%", maxWidth: 420 }}>
         <div className="text-center mb-10">
-          <img src="/grind-logo.svg" alt="GRIND" height="28" style={{ display: 'block', margin: '0 auto' }} />
+          <div style={{ display: 'flex', justifyContent: 'center' }}><GrindLogo height={48} /></div>
           <div className="label-uppercase mt-2" style={{ letterSpacing: "0.15em" }}>
             SISTEMA DE PERFORMANCE PESSOAL
           </div>
