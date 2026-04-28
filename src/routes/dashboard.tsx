@@ -60,7 +60,7 @@ const DASH_STYLES = `
 function SectionLabel({ children }: { children: React.ReactNode; pulse?: boolean }) {
   return (
     <div style={LABEL}>
-      <span className="grind-pulse-dot" style={{ color: "#E8003D", marginRight: 8 }}>●</span>
+      <span className="grind-live-square" style={{ marginRight: 8 }} aria-hidden="true" />
       {children}
     </div>
   );
