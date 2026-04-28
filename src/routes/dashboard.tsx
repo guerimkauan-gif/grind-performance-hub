@@ -410,7 +410,7 @@ function SectionCorpo() {
               <div style={{ height: 2, background: "#0A0A0A", marginBottom: 12 }}>
                 <div className="grind-bar-fill" style={{ height: "100%", background: "#E8003D", width: 0, ["--bar-target" as never]: `${m.pct}%` }} />
               </div>
-              <div style={{ fontSize: 12, color: "#555555" }}>{m.note}</div>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 400, fontSize: 12, color: "#555555" }}>{m.note}</div>
             </div>
           ))}
         </div>
