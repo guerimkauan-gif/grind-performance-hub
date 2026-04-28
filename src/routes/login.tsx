@@ -113,17 +113,18 @@ function LoginPage() {
             type="submit"
             disabled={submitting}
             style={{
-              background: "#E8003D",
+              backgroundColor: "#E8003D",
               color: "#FFFFFF",
               height: 52,
               border: "none",
+              borderRadius: 0,
               fontFamily: "'Space Grotesk', sans-serif",
               fontWeight: 700,
               fontSize: 12,
               letterSpacing: "0.12em",
               textTransform: "uppercase",
               cursor: submitting ? "not-allowed" : "pointer",
-              opacity: submitting ? 0.5 : 1,
+              filter: submitting ? "brightness(0.6)" : "none",
               width: "100%",
             }}
           >
