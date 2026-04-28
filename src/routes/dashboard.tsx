@@ -30,6 +30,7 @@ const DASH_STYLES = `
 @keyframes grind-strike { from { width: 0%; } to { width: 100%; } }
 @keyframes grind-fade-in { from { opacity: 0; } to { opacity: 1; } }
 .dash-logout:hover { border-color: #E8003D !important; color: #FFFFFF !important; }
+.grind-edit-btn:hover { color: #E8003D !important; }
 .grind-ring-arc { animation: grind-ring-draw 1.2s ease-out forwards; }
 .grind-bar-fill { animation: grind-bar-fill 0.8s ease-out forwards; }
 .grind-fade-in { animation: grind-fade-in 150ms ease-out; }
