@@ -255,7 +255,7 @@ function ScoreRing({ value }: { value: number }) {
           fill="none"
           stroke="#E8003D"
           strokeWidth={stroke}
-          strokeLinecap="square"
+          strokeLinecap="butt"
           strokeDasharray={circ}
           className="grind-ring-arc"
           style={{ ["--ring-circ" as never]: `${circ}px`, ["--ring-target" as never]: `${target}px` }}
