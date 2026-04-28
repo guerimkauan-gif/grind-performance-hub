@@ -783,3 +783,257 @@ function StatBox({ label, value, color }: { label: string; value: string; color:
     </div>
   );
 }
+
+/* ====================== CALENDÁRIO ====================== */
+type DayData = { recovery: number; sleepH: number; sleepM: number; hrv: number; score: number };
+
+const MONTH_NAMES_PT = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
+const MONTH_SHORT_PT = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
+const WEEKDAY_LONG_PT = ["DOMINGO", "SEGUNDA", "TERÇA", "QUARTA", "QUINTA", "SEXTA", "SÁBADO"];
+
+// Deterministic pseudo-random for SSR/CSR consistency
+function pseudo(seed: number) {
+  const x = Math.sin(seed * 9301 + 49297) * 233280;
+  return x - Math.floor(x);
+}
+
+function buildMonthData(year: number, month: number): Record<number, DayData> {
+  const out: Record<number, DayData> = {};
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  // Dataset spec: April 2026 — days 1..27 random, 28 fixed, 29-30 empty.
+  // For other months: fill all days deterministically.
+  const isApril2026 = year === 2026 && month === 3;
+  for (let d = 1; d <= daysInMonth; d++) {
+    if (isApril2026) {
+      if (d >= 29) continue;
+      if (d === 28) {
+        out[d] = { recovery: 87, sleepH: 7, sleepM: 32, hrv: 62, score: 87 };
+        continue;
+      }
+    }
+    const r1 = pseudo(year * 1000 + month * 50 + d);
+    const r2 = pseudo(year * 1000 + month * 50 + d + 100);
+    const r3 = pseudo(year * 1000 + month * 50 + d + 200);
+    const r4 = pseudo(year * 1000 + month * 50 + d + 300);
+    const recovery = Math.round(55 + r1 * 40);
+    const sleepTotalMin = Math.round((6 + r2 * 3) * 60);
+    out[d] = {
+      recovery,
+      sleepH: Math.floor(sleepTotalMin / 60),
+      sleepM: sleepTotalMin % 60,
+      hrv: Math.round(45 + r3 * 30),
+      score: Math.round(60 + r4 * 35),
+    };
+  }
+  return out;
+}
+
+function ArrowBtn({ dir, onClick }: { dir: "left" | "right"; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label={dir === "left" ? "Mês anterior" : "Próximo mês"}
+      className="grind-cal-arrow"
+      style={{
+        width: 32, height: 32, background: "#1A1A1A", border: "1px solid #2A2A2A", borderRadius: 0,
+        color: "#A0A0A0", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+        transition: "border-color 0.15s, color 0.15s",
+      }}
+    >
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
+        {dir === "left" ? <polyline points="8,2 4,6 8,10" /> : <polyline points="4,2 8,6 4,10" />}
+      </svg>
+    </button>
+  );
+}
+
+function MiniBar({ value, color }: { value: number | null; color: string }) {
+  return (
+    <div style={{ height: 4, background: "#1A1A1A", width: "100%" }}>
+      {value !== null && <div style={{ height: "100%", background: color, width: `${Math.max(0, Math.min(100, value))}%` }} />}
+    </div>
+  );
+}
+
+function SectionCalendario() {
+  // Anchor "today" to Apr 28, 2026 so placeholder spec lines up.
+  const TODAY = { year: 2026, month: 3, day: 28 };
+  const [view, setView] = useState({ year: TODAY.year, month: TODAY.month });
+  const [selected, setSelected] = useState<number | null>(null);
+
+  const data = useMemo(() => buildMonthData(view.year, view.month), [view]);
+  const firstWeekday = new Date(view.year, view.month, 1).getDay(); // 0=Dom
+  const daysInMonth = new Date(view.year, view.month + 1, 0).getDate();
+  const prevMonthDays = new Date(view.year, view.month, 0).getDate();
+  const totalCells = Math.ceil((firstWeekday + daysInMonth) / 7) * 7;
+
+  type Cell = { day: number; inMonth: boolean };
+  const cells: Cell[] = [];
+  for (let i = 0; i < totalCells; i++) {
+    const dayNum = i - firstWeekday + 1;
+    if (dayNum < 1) cells.push({ day: prevMonthDays + dayNum, inMonth: false });
+    else if (dayNum > daysInMonth) cells.push({ day: dayNum - daysInMonth, inMonth: false });
+    else cells.push({ day: dayNum, inMonth: true });
+  }
+
+  const goPrev = () => {
+    setSelected(null);
+    setView((v) => v.month === 0 ? { year: v.year - 1, month: 11 } : { year: v.year, month: v.month - 1 });
+  };
+  const goNext = () => {
+    setSelected(null);
+    setView((v) => v.month === 11 ? { year: v.year + 1, month: 0 } : { year: v.year, month: v.month + 1 });
+  };
+
+  const isToday = (day: number, inMonth: boolean) =>
+    inMonth && view.year === TODAY.year && view.month === TODAY.month && day === TODAY.day;
+
+  const selectedData = selected !== null ? data[selected] : null;
+  const dayLabels = ["D", "S", "T", "Q", "Q", "S", "S"];
+
+  return (
+    <div style={{ maxWidth: 900, margin: "0 auto", padding: 0 }}>
+      <style>{`
+        .grind-cal-arrow:hover { border-color: #E8003D !important; color: #FFFFFF !important; }
+        .grind-cal-cell:hover { border-color: #E8003D !important; }
+        .grind-cal-close:hover { color: #FFFFFF !important; }
+      `}</style>
+
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, marginBottom: 24 }}>
+        <ArrowBtn dir="left" onClick={goPrev} />
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 16, color: "#FFFFFF", minWidth: 180, textAlign: "center", letterSpacing: "0.05em" }}>
+          {MONTH_NAMES_PT[view.month]} {view.year}
+        </div>
+        <ArrowBtn dir="right" onClick={goNext} />
+      </div>
+
+      {/* Day labels */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6, marginBottom: 8 }}>
+        {dayLabels.map((d, i) => (
+          <div key={i} style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#555555", textAlign: "center", textTransform: "uppercase" }}>{d}</div>
+        ))}
+      </div>
+
+      {/* Calendar grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6 }}>
+        {cells.map((c, i) => {
+          const dayData = c.inMonth ? data[c.day] : undefined;
+          const today = isToday(c.day, c.inMonth);
+          const selectedCell = c.inMonth && selected === c.day;
+          return (
+            <div
+              key={i}
+              className="grind-cal-cell"
+              onClick={() => { if (c.inMonth && dayData) setSelected(c.day); }}
+              style={{
+                background: c.inMonth ? "#111111" : "#0A0A0A",
+                border: `1px solid ${selectedCell ? "#E8003D" : "#2A2A2A"}`,
+                borderRadius: 0,
+                padding: 8,
+                minHeight: 90,
+                cursor: c.inMonth && dayData ? "pointer" : "default",
+                display: "flex", flexDirection: "column", justifyContent: "space-between",
+                transition: "border-color 0.15s",
+              }}
+            >
+              <div style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: 11,
+                color: !c.inMonth ? "#333333" : today ? "#E8003D" : "#A0A0A0",
+                fontWeight: today ? 700 : 400,
+              }}>
+                {String(c.day).padStart(2, "0")}
+              </div>
+
+              {c.inMonth && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 3, marginTop: 8 }}>
+                  <MiniBar value={dayData?.recovery ?? null} color="#E8003D" />
+                  <MiniBar value={dayData ? Math.min(100, ((dayData.sleepH * 60 + dayData.sleepM) / 540) * 100) : null} color="#555555" />
+                  <MiniBar value={dayData ? Math.min(100, (dayData.hrv / 100) * 100) : null} color="#A0A0A0" />
+                  <div style={{ height: 4, background: "#1A1A1A", width: "100%" }}>
+                    {dayData && <div style={{ height: "100%", background: "#E8003D", opacity: 0.6, width: `${dayData.score}%` }} />}
+                  </div>
+                  {dayData && (
+                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 11, color: "#E8003D", marginTop: 4 }}>
+                      {dayData.score}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Legend */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginTop: 20 }}>
+        {[
+          { c: "#E8003D", l: "RECOVERY" },
+          { c: "#555555", l: "SONO" },
+          { c: "#A0A0A0", l: "HRV" },
+          { c: "#E8003D", l: "SCORE", op: 0.6 },
+        ].map((item) => (
+          <div key={item.l} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ display: "inline-block", width: 12, height: 4, background: item.c, opacity: item.op ?? 1 }} />
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#555555", textTransform: "uppercase" }}>{item.l}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Detail panel */}
+      {selectedData && selected !== null && (
+        <div className="grind-fade-in" style={{ background: "#111111", border: "1px solid #2A2A2A", borderRadius: 0, padding: 24, marginTop: 16, position: "relative" }}>
+          <button
+            onClick={() => setSelected(null)}
+            className="grind-cal-close"
+            style={{
+              position: "absolute", top: 16, right: 16,
+              background: "transparent", border: "none", cursor: "pointer",
+              fontFamily: "'Space Grotesk', sans-serif", fontSize: 11,
+              color: "#555555", textTransform: "uppercase", letterSpacing: "0.12em",
+              transition: "color 0.15s",
+            }}
+          >
+            FECHAR
+          </button>
+
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 13, color: "#FFFFFF", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+            {WEEKDAY_LONG_PT[new Date(view.year, view.month, selected).getDay()]} · {String(selected).padStart(2, "0")} {MONTH_SHORT_PT[view.month]} {view.year}
+          </div>
+          <div style={{ height: 1, background: "#2A2A2A", margin: "16px 0 20px" }} />
+
+          <div style={{ display: "grid", gap: 16, marginBottom: 24 }}>
+            <Metric name="RECOVERY" value={String(selectedData.recovery)} unit="%" pct={selectedData.recovery} />
+            <Metric name="SONO" value={`${selectedData.sleepH}h ${String(selectedData.sleepM).padStart(2, "0")}min`} pct={Math.min(100, ((selectedData.sleepH * 60 + selectedData.sleepM) / 540) * 100)} />
+            <Metric name="HRV" value={String(selectedData.hrv)} unit="ms" pct={Math.min(100, selectedData.hrv)} />
+            <Metric name="SCORE DO DIA" value={String(selectedData.score)} unit="%" pct={selectedData.score} />
+          </div>
+
+          <div style={{ height: 1, background: "#2A2A2A", margin: "8px 0 20px" }} />
+
+          <div style={{ marginBottom: 16 }}>
+            <SectionLabel>PLANO DO DIA</SectionLabel>
+          </div>
+          <p style={{ fontSize: 14, color: "#A0A0A0", lineHeight: 1.6, borderLeft: "2px solid #E8003D", paddingLeft: 16, marginBottom: 24 }}>
+            Seu corpo estava bem recuperado. HRV estável indicou mente apta para foco profundo.
+          </p>
+
+          {[
+            { n: "01", t: "Avançar no conteúdo mais difícil", c: "FOCO PROFUNDO" },
+            { n: "02", t: "Revisão moderada no período da tarde", c: "REVISÃO" },
+            { n: "03", t: "Dormir até 23h para manter o ritmo", c: "RECUPERAÇÃO" },
+          ].map((p, i) => (
+            <div key={p.n} style={{ display: "grid", gridTemplateColumns: "48px 1fr", gap: 16, padding: "16px 0", borderTop: i === 0 ? "none" : "1px solid #2A2A2A" }}>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 20, color: "#E8003D" }}>{p.n}</div>
+              <div>
+                <div style={{ fontSize: 14, color: "#FFFFFF", lineHeight: 1.4 }}>{p.t}</div>
+                <div style={{ fontSize: 11, color: "#555555", textTransform: "uppercase", letterSpacing: "0.12em", marginTop: 6 }}>{p.c}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
