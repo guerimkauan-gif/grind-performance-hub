@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { GrindLogo } from "@/components/GrindLogo";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
@@ -27,7 +28,7 @@ function DashboardPage() {
   return (
     <div className="min-h-screen" style={{ background: "#0A0A0A" }}>
       <header style={{ borderBottom: "1px solid #2A2A2A", padding: "20px 32px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <img src="/grind-logo.svg" alt="GRIND" height="28" style={{ display: 'block' }} />
+        <GrindLogo height={36} />
         <button onClick={logout} className="label-uppercase" style={{ background: "transparent", border: "1px solid #2A2A2A", padding: "10px 18px", color: "#FFFFFF", cursor: "pointer" }}>
           SAIR
         </button>
