@@ -93,6 +93,15 @@
   }
 }
 
+::selection {
+  background-color: #E8003D;
+  color: #FFFFFF;
+}
+::-moz-selection {
+  background-color: #E8003D;
+  color: #FFFFFF;
+}
+
 @layer utilities {
   .label-uppercase {
     text-transform: uppercase;
