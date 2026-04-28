@@ -10,6 +10,14 @@ export const Route = createFileRoute("/login")({
 
 type Tab = "login" | "signup";
 
+const LABEL: React.CSSProperties = {
+  fontSize: 11,
+  textTransform: "uppercase",
+  letterSpacing: "0.12em",
+  color: "#A0A0A0",
+  fontWeight: 400,
+};
+
 function LoginPage() {
   const navigate = useNavigate();
   const { session, loading } = useAuth();
@@ -52,61 +60,80 @@ function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "#0A0A0A" }}>
-      <div style={{ width: "100%", maxWidth: 420 }}>
-        <div className="text-center mb-10">
-          <div style={{ display: 'flex', justifyContent: 'center' }}><GrindLogo height={48} /></div>
-          <div className="label-uppercase mt-2" style={{ letterSpacing: "0.15em" }}>
-            SISTEMA DE PERFORMANCE PESSOAL
+      <div style={{ width: "100%", maxWidth: 440 }}>
+        <div style={{ textAlign: "center", marginBottom: 48 }}>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+            <GrindLogo height={36} />
           </div>
+          <div style={{ ...LABEL, letterSpacing: "0.15em" }}>SISTEMA DE PERFORMANCE PESSOAL</div>
         </div>
 
-        <div className="grind-card" style={{ padding: 0 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
-            <button
-              onClick={() => { setTab("login"); setError(null); }}
-              className="label-uppercase"
-              style={{
-                padding: "16px 0",
-                background: tab === "login" ? "#1A1A1A" : "transparent",
-                color: tab === "login" ? "#FFFFFF" : "#A0A0A0",
-                borderBottom: tab === "login" ? "2px solid #E8003D" : "1px solid #2A2A2A",
-                cursor: "pointer",
-              }}
-            >
-              LOGIN
-            </button>
-            <button
-              onClick={() => { setTab("signup"); setError(null); }}
-              className="label-uppercase"
-              style={{
-                padding: "16px 0",
-                background: tab === "signup" ? "#1A1A1A" : "transparent",
-                color: tab === "signup" ? "#FFFFFF" : "#A0A0A0",
-                borderBottom: tab === "signup" ? "2px solid #E8003D" : "1px solid #2A2A2A",
-                cursor: "pointer",
-              }}
-            >
-              CADASTRO
-            </button>
-          </div>
+        {/* Tabs */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", marginBottom: 32 }}>
+          {(["login", "signup"] as Tab[]).map((t) => {
+            const active = tab === t;
+            return (
+              <button
+                key={t}
+                onClick={() => { setTab(t); setError(null); }}
+                style={{
+                  padding: "14px 0",
+                  background: "transparent",
+                  border: "none",
+                  borderBottom: active ? "2px solid #E8003D" : "1px solid #2A2A2A",
+                  color: active ? "#FFFFFF" : "#555555",
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontWeight: 700,
+                  fontSize: 12,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  cursor: "pointer",
+                }}
+              >
+                {t === "login" ? "LOGIN" : "CADASTRO"}
+              </button>
+            );
+          })}
+        </div>
 
-          <form onSubmit={tab === "login" ? onLogin : onSignup} style={{ padding: 24, display: "grid", gap: 20 }}>
-            <Field label="EMAIL">
-              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+        <form onSubmit={tab === "login" ? onLogin : onSignup} style={{ display: "grid", gap: 20 }}>
+          <Field label="EMAIL">
+            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          </Field>
+          <Field label="SENHA">
+            <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+          </Field>
+          {tab === "signup" && (
+            <Field label="CONFIRMAR SENHA">
+              <input type="password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} />
             </Field>
-            <Field label="SENHA">
-              <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
-            </Field>
-            {tab === "signup" && (
-              <Field label="CONFIRMAR SENHA">
-                <input type="password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} />
-              </Field>
-            )}
-            {error && <div style={{ color: "#E8003D", fontSize: 13 }}>{error}</div>}
-            <button type="submit" className="btn-primary" disabled={submitting}>
-              {submitting ? "..." : tab === "login" ? "ENTRAR" : "CRIAR CONTA"}
-            </button>
-          </form>
+          )}
+          {error && <div style={{ color: "#E8003D", fontSize: 13 }}>{error}</div>}
+          <button
+            type="submit"
+            disabled={submitting}
+            style={{
+              background: "#E8003D",
+              color: "#FFFFFF",
+              height: 52,
+              border: "none",
+              fontFamily: "'Space Grotesk', sans-serif",
+              fontWeight: 700,
+              fontSize: 12,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              cursor: submitting ? "not-allowed" : "pointer",
+              opacity: submitting ? 0.5 : 1,
+              width: "100%",
+            }}
+          >
+            {submitting ? "..." : tab === "login" ? "ENTRAR" : "CRIAR CONTA"}
+          </button>
+        </form>
+
+        <div style={{ height: 1, background: "#2A2A2A", margin: "32px 0 16px" }} />
+        <div style={{ textAlign: "center", fontSize: 10, color: "#555555", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+          ACESSO SEGURO VIA SUPABASE
         </div>
       </div>
     </div>
@@ -116,11 +143,24 @@ function LoginPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label style={{ display: "grid", gap: 8 }}>
-      <span className="label-uppercase">{label}</span>
-      <div style={{ display: "grid" }}>
-        {children}
-      </div>
-      <style>{`label input { width: 100%; padding: 12px 14px; font-family: 'Space Grotesk', sans-serif; font-size: 15px; }`}</style>
+      <span style={LABEL}>{label}</span>
+      {children}
+      <style>{`
+        label input {
+          width: 100%;
+          height: 48px;
+          padding: 0 16px;
+          background: #111111;
+          border: 1px solid #2A2A2A;
+          color: #FFFFFF;
+          font-family: 'Space Grotesk', sans-serif;
+          font-size: 14px;
+        }
+        label input:focus {
+          border-color: #E8003D;
+          outline: none;
+        }
+      `}</style>
     </label>
   );
 }
