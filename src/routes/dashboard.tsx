@@ -59,9 +59,21 @@ const DASH_STYLES = `
 
 function SectionLabel({ children }: { children: React.ReactNode; pulse?: boolean }) {
   return (
-    <div style={LABEL}>
-      <span className="grind-live-square" style={{ marginRight: 8 }} aria-hidden="true" />
-      {children}
+    <div
+      style={{
+        ...LABEL,
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
+        border: "1px solid #2A2A2A",
+        background: "transparent",
+        padding: "4px 10px",
+        borderRadius: 0,
+        letterSpacing: "0.12em",
+      }}
+    >
+      <span className="grind-live-square" aria-hidden="true" />
+      <span>{children}</span>
     </div>
   );
 }
