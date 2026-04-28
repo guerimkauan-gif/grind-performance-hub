@@ -14,7 +14,98 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      daily_logs: {
+        Row: {
+          adherence_score: number | null
+          ai_plan: string | null
+          created_at: string
+          hrv: number | null
+          id: string
+          log_date: string
+          recovery_score: number | null
+          sleep_hours: number | null
+          strain: number | null
+          tasks_completed: number
+          tasks_total: number
+          user_id: string
+        }
+        Insert: {
+          adherence_score?: number | null
+          ai_plan?: string | null
+          created_at?: string
+          hrv?: number | null
+          id?: string
+          log_date: string
+          recovery_score?: number | null
+          sleep_hours?: number | null
+          strain?: number | null
+          tasks_completed?: number
+          tasks_total?: number
+          user_id: string
+        }
+        Update: {
+          adherence_score?: number | null
+          ai_plan?: string | null
+          created_at?: string
+          hrv?: number | null
+          id?: string
+          log_date?: string
+          recovery_score?: number | null
+          sleep_hours?: number | null
+          strain?: number | null
+          tasks_completed?: number
+          tasks_total?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          daily_hours: number | null
+          days_per_week: number | null
+          deadline: string | null
+          dream: string | null
+          id: string
+          onboarding_complete: boolean
+          whoop_access_token: string | null
+          whoop_refresh_token: string | null
+          whoop_token_expires_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          daily_hours?: number | null
+          days_per_week?: number | null
+          deadline?: string | null
+          dream?: string | null
+          id: string
+          onboarding_complete?: boolean
+          whoop_access_token?: string | null
+          whoop_refresh_token?: string | null
+          whoop_token_expires_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          daily_hours?: number | null
+          days_per_week?: number | null
+          deadline?: string | null
+          dream?: string | null
+          id?: string
+          onboarding_complete?: boolean
+          whoop_access_token?: string | null
+          whoop_refresh_token?: string | null
+          whoop_token_expires_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
