@@ -685,11 +685,17 @@ function SectionObjetivo({ profile, userId, onSaved }: { profile: Profile | null
                   </div>
                 </div>
               )}
-              {profile?.dream && (
-                <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 400, fontSize: 15, color: "#A0A0A0", lineHeight: 1.6, margin: "12px 0 0 0" }}>
-                  {profile.dream}
-                </p>
-              )}
+              {(() => {
+                const dreamText = profile?.dream?.trim() || "";
+                const goalText = (profile?.goal_name || "").trim();
+                const showDream = dreamText.length > 0 && dreamText.toLowerCase() !== goalText.toLowerCase();
+                if (!showDream) return null;
+                return (
+                  <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 400, fontSize: 15, color: "#A0A0A0", lineHeight: 1.6, margin: "12px 0 0 0" }}>
+                    {profile?.dream}
+                  </p>
+                );
+              })()}
             </div>
           );
         })()}
