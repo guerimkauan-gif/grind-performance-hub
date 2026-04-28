@@ -195,10 +195,10 @@ function DashboardPage() {
   useEffect(() => {
     if (loading) return;
     if (!session) { navigate({ to: "/login" }); return; }
-    supabase.from("profiles").select("onboarding_complete,dream,daily_hours,days_per_week,deadline,created_at").eq("id", session.user.id).maybeSingle().then(({ data }) => {
+    supabase.from("profiles").select("onboarding_complete,dream,goal_name,daily_hours,days_per_week,deadline,created_at").eq("id", session.user.id).maybeSingle().then(({ data }) => {
       if (!data?.onboarding_complete) { navigate({ to: "/onboarding" }); return; }
       setProfile({
-        dream: data.dream, daily_hours: data.daily_hours, days_per_week: data.days_per_week,
+        dream: data.dream, goal_name: data.goal_name, daily_hours: data.daily_hours, days_per_week: data.days_per_week,
         deadline: data.deadline, created_at: data.created_at,
       });
     });
