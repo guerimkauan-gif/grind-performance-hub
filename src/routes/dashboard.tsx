@@ -38,7 +38,7 @@ const DASH_STYLES = `
 .grind-trend-bar { position: relative; cursor: pointer; }
 .grind-trend-tip {
   position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
-  background: #1A1A1A; border: 1px solid #2A2A2A; color: #FFFFFF;
+  background: #111111; border: 1px solid #2A2A2A; color: #FFFFFF;
   font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 4px 8px;
   white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s;
 }
