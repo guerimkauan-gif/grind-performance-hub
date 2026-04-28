@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { GrindLogo } from "@/components/GrindLogo";
+
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -62,8 +62,19 @@ function LoginPage() {
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "#0A0A0A" }}>
       <div style={{ width: "100%", maxWidth: 440 }}>
         <div style={{ textAlign: "center", marginBottom: 48 }}>
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
-            <GrindLogo height={36} />
+          <div
+            style={{
+              fontFamily: "'Space Grotesk', sans-serif",
+              fontWeight: 700,
+              fontSize: 56,
+              color: "#FFFFFF",
+              letterSpacing: "0.25em",
+              lineHeight: 1,
+              marginBottom: 8,
+              paddingLeft: "0.25em",
+            }}
+          >
+            GRIND
           </div>
           <div style={{ ...LABEL, letterSpacing: "0.15em" }}>SISTEMA DE PERFORMANCE PESSOAL</div>
         </div>
