@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { GrindLogo } from "@/components/GrindLogo";
@@ -7,6 +7,9 @@ import { GrindLogo } from "@/components/GrindLogo";
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
 });
+
+type SectionKey = "HOJE" | "CORPO" | "PROGRESSO" | "OBJETIVO";
+const SECTIONS: SectionKey[] = ["HOJE", "CORPO", "PROGRESSO", "OBJETIVO"];
 
 const LABEL: React.CSSProperties = {
   fontSize: 11,
@@ -25,9 +28,11 @@ const DASH_STYLES = `
 @keyframes grind-pulse-ring { 0% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; } 100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; } }
 @keyframes grind-check-pop { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 @keyframes grind-strike { from { width: 0%; } to { width: 100%; } }
+@keyframes grind-fade-in { from { opacity: 0; } to { opacity: 1; } }
 .dash-logout:hover { border-color: #E8003D !important; color: #FFFFFF !important; }
 .grind-ring-arc { animation: grind-ring-draw 1.2s ease-out forwards; }
 .grind-bar-fill { animation: grind-bar-fill 0.8s ease-out forwards; }
+.grind-fade-in { animation: grind-fade-in 150ms ease-out; }
 .grind-live-square {
   position: relative; display: inline-block; vertical-align: middle;
   width: 6px; height: 6px; background: #E8003D; border-radius: 0;
@@ -55,6 +60,51 @@ const DASH_STYLES = `
   white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s;
 }
 .grind-trend-bar:hover .grind-trend-tip { opacity: 1; }
+.grind-tab {
+  background: transparent; border: none; cursor: pointer;
+  font-family: 'Space Grotesk', sans-serif; font-weight: 400;
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em;
+  color: #555555; padding: 0 20px; height: 56px; line-height: 56px;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: color 0.15s;
+}
+.grind-tab:hover { color: #A0A0A0; }
+.grind-tab.active { color: #FFFFFF; border-bottom-color: #E8003D; }
+.grind-hamburger {
+  display: none; flex-direction: column; gap: 4px; background: transparent;
+  border: none; cursor: pointer; padding: 8px; margin-right: 8px;
+}
+.grind-hamburger span { display: block; width: 18px; height: 2px; background: #A0A0A0; }
+.grind-tabs-desktop { display: flex; align-items: center; }
+@media (max-width: 767px) {
+  .grind-tabs-desktop { display: none !important; }
+  .grind-hamburger { display: flex !important; }
+  .grind-main-grid { grid-template-columns: 1fr !important; }
+  .grind-header { padding: 0 16px !important; }
+  .grind-main { padding: 20px !important; }
+}
+.grind-drawer-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 40;
+  animation: grind-fade-in 150ms ease-out;
+}
+.grind-drawer {
+  position: fixed; top: 0; left: 0; bottom: 0; width: 240px;
+  background: #0A0A0A; border-right: 1px solid #2A2A2A; z-index: 50;
+  animation: grind-fade-in 150ms ease-out;
+  display: flex; flex-direction: column;
+}
+.grind-drawer-item {
+  display: flex; align-items: center; gap: 12px; height: 52px; padding: 0 24px;
+  background: transparent; border: none; cursor: pointer; width: 100%;
+  text-align: left; color: #555555;
+  font-family: 'Space Grotesk', sans-serif; font-weight: 400;
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em;
+  border-bottom: 1px solid #2A2A2A; border-left: 3px solid transparent;
+}
+.grind-drawer-item.active {
+  color: #FFFFFF; background: #1A1A1A; border-left-color: #E8003D;
+}
+.grind-drawer-item.active svg { stroke: #FFFFFF; }
 `;
 
 function SectionLabel({ children }: { children: React.ReactNode; pulse?: boolean }) {
@@ -85,183 +135,566 @@ function formatToday() {
   return `${days[d.getDay()]} · ${String(d.getDate()).padStart(2, "0")} ${months[d.getMonth()]} ${d.getFullYear()}`;
 }
 
+function formatDeadline(d?: string | null) {
+  if (!d) return "—";
+  const months = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
+  const date = new Date(d);
+  return `${String(date.getDate()).padStart(2, "0")} ${months[date.getMonth()]} ${date.getFullYear()}`;
+}
+
+// Icons
+const IconSun = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555555" strokeWidth="2">
+    <circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+  </svg>
+);
+const IconPulse = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555555" strokeWidth="2">
+    <path d="M2 12h4l2-6 4 12 2-6 2 3h6" />
+  </svg>
+);
+const IconBars = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555555" strokeWidth="2">
+    <line x1="4" y1="20" x2="4" y2="10" /><line x1="10" y1="20" x2="10" y2="4" /><line x1="16" y1="20" x2="16" y2="14" /><line x1="22" y1="20" x2="22" y2="8" />
+  </svg>
+);
+const IconTarget = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555555" strokeWidth="2">
+    <circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.5" fill="#555555" />
+  </svg>
+);
+const ICONS: Record<SectionKey, () => React.ReactElement> = {
+  HOJE: IconSun, CORPO: IconPulse, PROGRESSO: IconBars, OBJETIVO: IconTarget,
+};
+
+type Profile = {
+  dream: string | null;
+  daily_hours: number | null;
+  days_per_week: number | null;
+  deadline: string | null;
+  created_at: string;
+};
+
 function DashboardPage() {
   const { session, loading } = useAuth();
   const navigate = useNavigate();
-  const [tasks, setTasks] = useState([
-    { label: "4h de estudo focado", done: false },
-    { label: "Revisão de flashcards", done: true },
-    { label: "Dormir antes das 23h", done: false },
-  ]);
-  const [popKey, setPopKey] = useState<Record<number, number>>({});
+  const [section, setSection] = useState<SectionKey>(() => {
+    if (typeof window === "undefined") return "HOJE";
+    const s = window.localStorage.getItem("grind:section") as SectionKey | null;
+    return s && SECTIONS.includes(s) ? s : "HOJE";
+  });
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [profile, setProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
     if (loading) return;
     if (!session) { navigate({ to: "/login" }); return; }
-    supabase.from("profiles").select("onboarding_complete").eq("id", session.user.id).maybeSingle().then(({ data }) => {
-      if (!data?.onboarding_complete) navigate({ to: "/onboarding" });
+    supabase.from("profiles").select("onboarding_complete,dream,daily_hours,days_per_week,deadline,created_at").eq("id", session.user.id).maybeSingle().then(({ data }) => {
+      if (!data?.onboarding_complete) { navigate({ to: "/onboarding" }); return; }
+      setProfile({
+        dream: data.dream, daily_hours: data.daily_hours, days_per_week: data.days_per_week,
+        deadline: data.deadline, created_at: data.created_at,
+      });
     });
   }, [session, loading, navigate]);
+
+  useEffect(() => {
+    try { window.localStorage.setItem("grind:section", section); } catch { /* ignore */ }
+  }, [section]);
 
   const logout = async () => {
     await supabase.auth.signOut();
     navigate({ to: "/login" });
   };
 
-  const toggleTask = (i: number) => {
-    setTasks((prev) => prev.map((x, idx) => idx === i ? { ...x, done: !x.done } : x));
-    setPopKey((p) => ({ ...p, [i]: (p[i] || 0) + 1 }));
-  };
-
-  const completed = tasks.filter((t) => t.done).length;
+  const goSection = (s: SectionKey) => { setSection(s); setDrawerOpen(false); };
 
   return (
     <div style={{ background: "#0A0A0A", minHeight: "100vh", color: "#FFFFFF" }}>
       <style>{DASH_STYLES}</style>
 
       {/* Top bar */}
-      <header style={{ height: 56, borderBottom: "1px solid #2A2A2A", boxShadow: "0 1px 0 #E8003D20", padding: "0 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <GrindLogo height={28} />
-        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "#A0A0A0", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-          {formatToday()}
+      <header className="grind-header" style={{ height: 56, borderBottom: "1px solid #2A2A2A", boxShadow: "0 1px 0 #E8003D20", padding: "0 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <button className="grind-hamburger" aria-label="Menu" onClick={() => setDrawerOpen(true)}>
+            <span /><span /><span />
+          </button>
+          <GrindLogo size={28} />
         </div>
-        <button
-          onClick={logout}
-          className="dash-logout"
-          style={{
-            height: 32,
-            padding: "0 14px",
-            background: "transparent",
-            border: "1px solid #2A2A2A",
-            color: "#A0A0A0",
-            fontSize: 11,
-            textTransform: "uppercase",
-            letterSpacing: "0.12em",
-            fontFamily: "'Space Grotesk', sans-serif",
-            cursor: "pointer",
-            transition: "border-color 0.15s, color 0.15s",
-          }}
-        >
+
+        <nav className="grind-tabs-desktop">
+          {SECTIONS.map((s) => (
+            <button key={s} className={`grind-tab ${section === s ? "active" : ""}`} onClick={() => setSection(s)}>
+              {s}
+            </button>
+          ))}
+        </nav>
+
+        <button onClick={logout} className="dash-logout" style={{ height: 32, padding: "0 14px", background: "transparent", border: "1px solid #2A2A2A", color: "#A0A0A0", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", fontFamily: "'Space Grotesk', sans-serif", cursor: "pointer", transition: "border-color 0.15s, color 0.15s" }}>
           SAIR
         </button>
       </header>
 
+      {/* Mobile drawer */}
+      {drawerOpen && (
+        <>
+          <div className="grind-drawer-overlay" onClick={() => setDrawerOpen(false)} />
+          <aside className="grind-drawer">
+            <div style={{ padding: "16px 24px" }}>
+              <GrindLogo size={28} />
+            </div>
+            <div style={{ height: 1, background: "#2A2A2A" }} />
+            {SECTIONS.map((s) => {
+              const Icon = ICONS[s];
+              const active = section === s;
+              return (
+                <button key={s} className={`grind-drawer-item ${active ? "active" : ""}`} onClick={() => goSection(s)}>
+                  <Icon />
+                  <span>{s}</span>
+                </button>
+              );
+            })}
+          </aside>
+        </>
+      )}
+
       {/* Main */}
-      <main style={{ maxWidth: 1280, margin: "0 auto", padding: 32, display: "grid", gridTemplateColumns: "65fr 35fr", gap: 24 }}>
-        {/* LEFT */}
-        <div style={{ display: "grid", gap: 32, alignContent: "start" }}>
-          {/* Block 1 — Score */}
-          <section>
-            <SectionLabel>SCORE DO OBJETIVO</SectionLabel>
-            <div style={SEP} />
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 12 }}>
-              <ScoreRing value={87} />
-              <div style={{ ...LABEL, color: "#555555" }}>ADERÊNCIA AO PLANO</div>
-            </div>
-            <p style={{ fontSize: 13, color: "#A0A0A0", marginTop: 16, lineHeight: 1.6 }}>
-              No ritmo atual você completa o plano 3 dias antes do prazo.
-            </p>
-          </section>
-
-          {/* Block 2 — Plano do Dia */}
-          <section>
-            <SectionLabel>PLANO DO DIA</SectionLabel>
-            <div style={SEP} />
-            <p style={{ fontSize: 15, color: "#FFFFFF", lineHeight: 1.6, marginBottom: 24, borderLeft: "2px solid #E8003D", paddingLeft: 16 }}>
-              Seu corpo está bem recuperado hoje. HRV estável indica mente apta para foco profundo.
-            </p>
-            {[
-              { n: "01", t: "Avançar no conteúdo mais difícil agora", c: "FOCO PROFUNDO" },
-              { n: "02", t: "Revisão moderada no período da tarde", c: "REVISÃO" },
-              { n: "03", t: "Dormir até 23h para manter o ritmo amanhã", c: "RECUPERAÇÃO" },
-            ].map((p, i) => (
-              <div key={p.n} style={{ display: "grid", gridTemplateColumns: "48px 1fr", gap: 16, padding: "16px 0", borderTop: i === 0 ? "none" : "1px solid #2A2A2A" }}>
-                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 20, color: "#E8003D" }}>{p.n}</div>
-                <div>
-                  <div style={{ fontSize: 14, color: "#FFFFFF", lineHeight: 1.4 }}>{p.t}</div>
-                  <div style={{ fontSize: 11, color: "#555555", textTransform: "uppercase", letterSpacing: "0.12em", marginTop: 6 }}>{p.c}</div>
-                </div>
-              </div>
-            ))}
-          </section>
-
-          {/* Block 3 — Checklist */}
-          <section>
-            <SectionLabel>TAREFAS DO DIA</SectionLabel>
-            <div style={SEP} />
-            <div style={{ display: "grid", gap: 12 }}>
-              {tasks.map((t, i) => (
-                <label key={i} style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
-                  <span
-                    key={`box-${i}-${popKey[i] || 0}`}
-                    onClick={() => toggleTask(i)}
-                    className={popKey[i] ? "grind-check-pop" : ""}
-                    style={{
-                      width: 18,
-                      height: 18,
-                      border: "1px solid #2A2A2A",
-                      background: t.done ? "#E8003D" : "transparent",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "#FFFFFF",
-                      fontSize: 12,
-                      flexShrink: 0,
-                    }}
-                  >
-                    {t.done ? "✓" : ""}
-                  </span>
-                  <span
-                    className={`grind-strike-wrap ${t.done ? "on" : ""}`}
-                    style={{ fontSize: 14, color: t.done ? "#555555" : "#FFFFFF" }}
-                  >
-                    {t.label}
-                  </span>
-                </label>
-              ))}
-            </div>
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "#A0A0A0", marginTop: 16, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              {completed} DE {tasks.length} CONCLUÍDAS
-            </div>
-          </section>
-        </div>
-
-        {/* RIGHT */}
-        <div style={{ display: "grid", gap: 32, alignContent: "start" }}>
-          {/* Block 4 — Métricas */}
-          <section>
-            <SectionLabel pulse>CORPO · HOJE</SectionLabel>
-            <div style={SEP} />
-            <div style={{ display: "grid", gap: 20 }}>
-              <Metric name="RECOVERY" value="87" unit="%" pct={87} />
-              <Metric name="HRV" value="62" unit="ms" pct={65} />
-              <Metric name="SONO" value="7h 32min" pct={80} />
-              <Metric name="STRAIN" value="11.4" pct={55} />
-            </div>
-          </section>
-
-          {/* Block 5 — Tendência */}
-          <section>
-            <SectionLabel>TENDÊNCIA · 7 DIAS</SectionLabel>
-            <div style={SEP} />
-            <Trend />
-          </section>
-
-          {/* Block 6 — Projeção */}
-          <section>
-            <SectionLabel>PROJEÇÃO</SectionLabel>
-            <div style={SEP} />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <StatBox label="DIAS RESTANTES" value="127" color="#FFFFFF" />
-              <StatBox label="DIAS À FRENTE" value="+3" color="#E8003D" />
-            </div>
-          </section>
-        </div>
+      <main key={section} className="grind-fade-in grind-main" style={{ maxWidth: 1280, margin: "0 auto", padding: 32 }}>
+        {section === "HOJE" && <SectionHoje />}
+        {section === "CORPO" && <SectionCorpo />}
+        {section === "PROGRESSO" && <SectionProgresso />}
+        {section === "OBJETIVO" && <SectionObjetivo profile={profile} userId={session?.user.id} onSaved={(p) => setProfile((cur) => cur ? { ...cur, ...p } : cur)} />}
       </main>
     </div>
   );
 }
 
+/* ====================== HOJE (original dashboard content) ====================== */
+function SectionHoje() {
+  const [tasks, setTasks] = useState([
+    { label: "4h de estudo focado", done: false },
+    { label: "Revisão de flashcards", done: true },
+    { label: "Dormir antes das 23h", done: false },
+  ]);
+  const [popKey, setPopKey] = useState<Record<number, number>>({});
+  const toggleTask = (i: number) => {
+    setTasks((prev) => prev.map((x, idx) => idx === i ? { ...x, done: !x.done } : x));
+    setPopKey((p) => ({ ...p, [i]: (p[i] || 0) + 1 }));
+  };
+  const completed = tasks.filter((t) => t.done).length;
+
+  return (
+    <div className="grind-main-grid" style={{ display: "grid", gridTemplateColumns: "65fr 35fr", gap: 24 }}>
+      {/* LEFT */}
+      <div style={{ display: "grid", gap: 32, alignContent: "start" }}>
+        <section>
+          <SectionLabel>SCORE DO OBJETIVO</SectionLabel>
+          <div style={SEP} />
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 12 }}>
+            <ScoreRing value={87} />
+            <div style={{ ...LABEL, color: "#555555" }}>ADERÊNCIA AO PLANO</div>
+          </div>
+          <p style={{ fontSize: 13, color: "#A0A0A0", marginTop: 16, lineHeight: 1.6 }}>
+            No ritmo atual você completa o plano 3 dias antes do prazo.
+          </p>
+        </section>
+
+        <section>
+          <SectionLabel>PLANO DO DIA</SectionLabel>
+          <div style={SEP} />
+          <p style={{ fontSize: 15, color: "#FFFFFF", lineHeight: 1.6, marginBottom: 24, borderLeft: "2px solid #E8003D", paddingLeft: 16 }}>
+            Seu corpo está bem recuperado hoje. HRV estável indica mente apta para foco profundo.
+          </p>
+          {[
+            { n: "01", t: "Avançar no conteúdo mais difícil agora", c: "FOCO PROFUNDO" },
+            { n: "02", t: "Revisão moderada no período da tarde", c: "REVISÃO" },
+            { n: "03", t: "Dormir até 23h para manter o ritmo amanhã", c: "RECUPERAÇÃO" },
+          ].map((p, i) => (
+            <div key={p.n} style={{ display: "grid", gridTemplateColumns: "48px 1fr", gap: 16, padding: "16px 0", borderTop: i === 0 ? "none" : "1px solid #2A2A2A" }}>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 20, color: "#E8003D" }}>{p.n}</div>
+              <div>
+                <div style={{ fontSize: 14, color: "#FFFFFF", lineHeight: 1.4 }}>{p.t}</div>
+                <div style={{ fontSize: 11, color: "#555555", textTransform: "uppercase", letterSpacing: "0.12em", marginTop: 6 }}>{p.c}</div>
+              </div>
+            </div>
+          ))}
+        </section>
+
+        <section>
+          <SectionLabel>TAREFAS DO DIA</SectionLabel>
+          <div style={SEP} />
+          <div style={{ display: "grid", gap: 12 }}>
+            {tasks.map((t, i) => (
+              <label key={i} style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
+                <span
+                  key={`box-${i}-${popKey[i] || 0}`}
+                  onClick={() => toggleTask(i)}
+                  className={popKey[i] ? "grind-check-pop" : ""}
+                  style={{ width: 18, height: 18, border: "1px solid #2A2A2A", background: t.done ? "#E8003D" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", color: "#FFFFFF", fontSize: 12, flexShrink: 0 }}
+                >
+                  {t.done ? "✓" : ""}
+                </span>
+                <span className={`grind-strike-wrap ${t.done ? "on" : ""}`} style={{ fontSize: 14, color: t.done ? "#555555" : "#FFFFFF" }}>
+                  {t.label}
+                </span>
+              </label>
+            ))}
+          </div>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "#A0A0A0", marginTop: 16, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            {completed} DE {tasks.length} CONCLUÍDAS
+          </div>
+        </section>
+      </div>
+
+      {/* RIGHT */}
+      <div style={{ display: "grid", gap: 32, alignContent: "start" }}>
+        <section>
+          <SectionLabel>CORPO · HOJE</SectionLabel>
+          <div style={SEP} />
+          <div style={{ display: "grid", gap: 20 }}>
+            <Metric name="RECOVERY" value="87" unit="%" pct={87} />
+            <Metric name="HRV" value="62" unit="ms" pct={65} />
+            <Metric name="SONO" value="7h 32min" pct={80} />
+            <Metric name="STRAIN" value="11.4" pct={55} />
+          </div>
+        </section>
+
+        <section>
+          <SectionLabel>TENDÊNCIA · 7 DIAS</SectionLabel>
+          <div style={SEP} />
+          <Trend />
+        </section>
+
+        <section>
+          <SectionLabel>PROJEÇÃO</SectionLabel>
+          <div style={SEP} />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <StatBox label="DIAS RESTANTES" value="127" color="#FFFFFF" />
+            <StatBox label="DIAS À FRENTE" value="+3" color="#E8003D" />
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+/* ====================== CORPO ====================== */
+function SectionCorpo() {
+  const metrics = [
+    { name: "RECOVERY", value: "87", unit: "%", pct: 87, note: "Excelente — dia de alta performance" },
+    { name: "HRV", value: "62", unit: "ms", pct: 65, note: "Estável — foco profundo recomendado" },
+    { name: "SONO", value: "7h 32min", unit: "", pct: 80, note: "Adequado — ritmo normal" },
+    { name: "STRAIN", value: "11.4", unit: "", pct: 55, note: "Equilibrado — manter o ritmo" },
+  ];
+  return (
+    <div style={{ maxWidth: 800, margin: "0 auto", display: "grid", gap: 40 }}>
+      <section>
+        <SectionLabel>CORPO · HOJE</SectionLabel>
+        <div style={SEP} />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
+          {metrics.map((m) => (
+            <div key={m.name} style={{ background: "#1A1A1A", border: "1px solid #2A2A2A", padding: 24 }}>
+              <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: "#A0A0A0", marginBottom: 12 }}>{m.name}</div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 16 }}>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 36, color: "#FFFFFF" }}>{m.value}</span>
+                {m.unit && <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, color: "#555555" }}>{m.unit}</span>}
+              </div>
+              <div style={{ height: 2, background: "#0A0A0A", marginBottom: 12 }}>
+                <div className="grind-bar-fill" style={{ height: "100%", background: "#E8003D", width: 0, ["--bar-target" as never]: `${m.pct}%` }} />
+              </div>
+              <div style={{ fontSize: 12, color: "#555555" }}>{m.note}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <SectionLabel>EVOLUÇÃO · 7 DIAS</SectionLabel>
+        <div style={SEP} />
+        <LineChart data={[72, 65, 81, 78, 55, 90, 87]} days={["SEG", "TER", "QUA", "QUI", "SEX", "SÁB", "DOM"]} />
+      </section>
+
+      <section>
+        <SectionLabel>ALERTA</SectionLabel>
+        <div style={SEP} />
+        <div style={{ background: "#111111", borderLeft: "3px solid #E8003D", padding: "16px 20px", color: "#A0A0A0", fontSize: 14, lineHeight: 1.5 }}>
+          HRV em queda nos últimos 3 dias — considere reduzir a carga amanhã.
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function LineChart({ data, days }: { data: number[]; days: string[] }) {
+  const W = 720, H = 200, padL = 36, padR = 12, padT = 16, padB = 28;
+  const innerW = W - padL - padR;
+  const innerH = H - padT - padB;
+  const yTicks = [0, 25, 50, 75, 100];
+  const points = data.map((v, i) => {
+    const x = padL + (innerW * i) / (data.length - 1);
+    const y = padT + innerH * (1 - v / 100);
+    return { x, y, v };
+  });
+  const poly = points.map((p) => `${p.x},${p.y}`).join(" ");
+  const [hover, setHover] = useState<number | null>(null);
+  return (
+    <div style={{ position: "relative", width: "100%", overflowX: "auto" }}>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto", display: "block" }}>
+        {yTicks.map((t) => {
+          const y = padT + innerH * (1 - t / 100);
+          return (
+            <g key={t}>
+              <line x1={padL} y1={y} x2={W - padR} y2={y} stroke="#1A1A1A" strokeWidth={1} />
+              <text x={padL - 8} y={y + 3} fontFamily="'JetBrains Mono', monospace" fontSize={10} fill="#555555" textAnchor="end">{t}</text>
+            </g>
+          );
+        })}
+        <polyline points={poly} fill="none" stroke="#E8003D" strokeWidth={2} />
+        {points.map((p, i) => (
+          <g key={i} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)} style={{ cursor: "pointer" }}>
+            <circle cx={p.x} cy={p.y} r={6} fill="#E8003D" stroke="#0A0A0A" strokeWidth={2} />
+            {hover === i && (
+              <g>
+                <rect x={p.x - 22} y={p.y - 30} width={44} height={20} fill="#111111" stroke="#2A2A2A" />
+                <text x={p.x} y={p.y - 16} fontFamily="'JetBrains Mono', monospace" fontSize={11} fill="#FFFFFF" textAnchor="middle">{p.v}%</text>
+              </g>
+            )}
+          </g>
+        ))}
+        {points.map((p, i) => (
+          <text key={i} x={p.x} y={H - 8} fontFamily="'JetBrains Mono', monospace" fontSize={10} fill="#555555" textAnchor="middle">{days[i]}</text>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+/* ====================== PROGRESSO ====================== */
+function SectionProgresso() {
+  const scores = useMemo(() => {
+    // deterministic pseudo-random for SSR/CSR consistency
+    const arr: number[] = [];
+    let seed = 7;
+    for (let i = 0; i < 30; i++) {
+      seed = (seed * 9301 + 49297) % 233280;
+      arr.push(60 + Math.floor((seed / 233280) * 36)); // 60-95
+    }
+    return arr;
+  }, []);
+  const todayIdx = scores.length - 1;
+  const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+  const best = Math.max(...scores);
+
+  const weeks = [
+    { w: "SEMANA 17", dias: "6/7", horas: "26h", score: "84%" },
+    { w: "SEMANA 18", dias: "7/7", horas: "31h", score: "91%" },
+    { w: "SEMANA 19", dias: "5/7", horas: "22h", score: "76%" },
+    { w: "SEMANA 20", dias: "7/7", horas: "29h", score: "88%" },
+  ];
+
+  return (
+    <div style={{ maxWidth: 800, margin: "0 auto", display: "grid", gap: 40 }}>
+      <section>
+        <SectionLabel>SCORE · 30 DIAS</SectionLabel>
+        <div style={SEP} />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(30, 1fr)", gap: 4, alignItems: "end", height: 140, borderBottom: "1px solid #2A2A2A", paddingBottom: 4 }}>
+          {scores.map((v, i) => {
+            const h = (v / 100) * 130;
+            const isToday = i === todayIdx;
+            const bg = v > 80 ? "#E8003D" : "#2A2A2A";
+            return <div key={i} title={`Dia ${i + 1}: ${v}%`} style={{ height: h, background: bg, border: isToday ? "1px solid #E8003D" : "none" }} />;
+          })}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 20 }}>
+          <SummaryStat label="MÉDIA" value={`${avg}%`} color="#FFFFFF" />
+          <SummaryStat label="MELHOR DIA" value={`${best}%`} color="#E8003D" />
+          <SummaryStat label="SEQUÊNCIA ATUAL" value="7 dias" color="#FFFFFF" />
+        </div>
+      </section>
+
+      <section>
+        <SectionLabel>SEMANAS</SectionLabel>
+        <div style={SEP} />
+        <div>
+          <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1fr", gap: 12, padding: "12px 0", borderBottom: "1px solid #2A2A2A", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: "#A0A0A0" }}>
+            <div>SEMANA</div><div>DIAS CUMPRIDOS</div><div>HORAS FOCADAS</div><div>SCORE MÉDIO</div>
+          </div>
+          {weeks.map((w) => (
+            <div key={w.w} style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1fr", gap: 12, padding: "16px 0", borderBottom: "1px solid #2A2A2A", alignItems: "center" }}>
+              <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: "#FFFFFF" }}>{w.w}</div>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, color: "#FFFFFF" }}>{w.dias}</div>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, color: "#FFFFFF" }}>{w.horas}</div>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, color: "#E8003D" }}>{w.score}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <SectionLabel>PROJEÇÃO</SectionLabel>
+        <div style={SEP} />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <StatBox label="DIAS RESTANTES" value="127" color="#FFFFFF" />
+          <StatBox label="DIAS À FRENTE" value="+3" color="#E8003D" />
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function SummaryStat({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <div style={{ background: "#111111", border: "1px solid #2A2A2A", padding: "16px 20px" }}>
+      <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: "#A0A0A0", marginBottom: 10 }}>{label}</div>
+      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 24, color, lineHeight: 1 }}>{value}</div>
+    </div>
+  );
+}
+
+/* ====================== OBJETIVO ====================== */
+function SectionObjetivo({ profile, userId, onSaved }: { profile: Profile | null; userId?: string; onSaved: (p: Partial<Profile>) => void }) {
+  const [editing, setEditing] = useState(false);
+  const [hours, setHours] = useState<string>(profile?.daily_hours?.toString() ?? "");
+  const [days, setDays] = useState<string>(profile?.days_per_week?.toString() ?? "");
+  const [deadline, setDeadline] = useState<string>(profile?.deadline ?? "");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setHours(profile?.daily_hours?.toString() ?? "");
+    setDays(profile?.days_per_week?.toString() ?? "");
+    setDeadline(profile?.deadline ?? "");
+  }, [profile]);
+
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const deadlineDate = profile?.deadline ? new Date(profile.deadline) : null;
+  const startDate = profile?.created_at ? new Date(profile.created_at) : null;
+  const daysRemaining = deadlineDate ? Math.max(0, Math.ceil((deadlineDate.getTime() - today.getTime()) / 86400000)) : 0;
+  const totalDays = startDate && deadlineDate ? Math.max(1, Math.ceil((deadlineDate.getTime() - startDate.getTime()) / 86400000)) : 1;
+  const elapsedDays = startDate ? Math.max(0, Math.ceil((today.getTime() - startDate.getTime()) / 86400000)) : 0;
+  const elapsedPct = Math.min(100, Math.round((elapsedDays / totalDays) * 100));
+
+  const save = async () => {
+    if (!userId) return;
+    setError(null);
+    const yr = parseInt(deadline.split("-")[0] || "0", 10);
+    if (!deadline || yr < 2025) { setError("Data inválida — escolha uma data futura"); return; }
+    setSaving(true);
+    const payload = {
+      daily_hours: hours ? parseFloat(hours) : null,
+      days_per_week: days ? parseInt(days, 10) : null,
+      deadline,
+    };
+    const { error } = await supabase.from("profiles").update(payload).eq("id", userId);
+    setSaving(false);
+    if (error) { setError(error.message); return; }
+    onSaved(payload);
+    setEditing(false);
+  };
+
+  return (
+    <div style={{ maxWidth: 800, margin: "0 auto", display: "grid", gap: 40 }}>
+      <section>
+        <SectionLabel>SEU SONHO</SectionLabel>
+        <div style={SEP} />
+        <div style={{ borderLeft: "3px solid #E8003D", paddingLeft: 20 }}>
+          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 400, fontSize: 20, color: "#FFFFFF", lineHeight: 1.6, margin: 0 }}>
+            {profile?.dream || "—"}
+          </p>
+        </div>
+        <div style={{ fontSize: 11, color: "#555555", textTransform: "uppercase", letterSpacing: "0.12em", marginTop: 12 }}>
+          Definido no seu onboarding
+        </div>
+      </section>
+
+      <section>
+        <SectionLabel>SEU PLANO</SectionLabel>
+        <div style={SEP} />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+          <PlanBox label="HORAS POR DIA" value={profile?.daily_hours != null ? String(profile.daily_hours) : "—"} size={36} />
+          <PlanBox label="DIAS POR SEMANA" value={profile?.days_per_week != null ? String(profile.days_per_week) : "—"} size={36} />
+          <PlanBox label="DATA LIMITE" value={formatDeadline(profile?.deadline)} size={24} />
+        </div>
+      </section>
+
+      <section>
+        <SectionLabel>COUNTDOWN</SectionLabel>
+        <div style={SEP} />
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 96, color: "#E8003D", lineHeight: 1 }}>
+            {daysRemaining}
+          </div>
+          <div style={{ fontSize: 11, color: "#555555", textTransform: "uppercase", letterSpacing: "0.15em", marginTop: 12 }}>
+            DIAS ATÉ O PRAZO
+          </div>
+          <div style={{ height: 2, background: "#1A1A1A", marginTop: 24, maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}>
+            <div style={{ height: "100%", background: "#E8003D", width: `${elapsedPct}%`, transition: "width 0.5s" }} />
+          </div>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#555555", marginTop: 8 }}>
+            {elapsedPct}% DO TEMPO DECORRIDO
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <SectionLabel>EDITAR OBJETIVO</SectionLabel>
+        <div style={SEP} />
+        {!editing ? (
+          <button onClick={() => setEditing(true)} style={{ background: "transparent", border: "1px solid #2A2A2A", color: "#A0A0A0", textTransform: "uppercase", fontSize: 11, letterSpacing: "0.12em", height: 44, padding: "0 20px", cursor: "pointer", fontFamily: "'Space Grotesk', sans-serif" }}>
+            EDITAR MEU PLANO
+          </button>
+        ) : (
+          <div style={{ display: "grid", gap: 16, maxWidth: 480 }}>
+            <Field label="HORAS POR DIA">
+              <input type="number" min={0} step={0.5} value={hours} onChange={(e) => setHours(e.target.value)} style={inputStyle} />
+            </Field>
+            <Field label="DIAS POR SEMANA">
+              <input type="number" min={1} max={7} value={days} onChange={(e) => setDays(e.target.value)} style={inputStyle} />
+            </Field>
+            <Field label="DATA LIMITE">
+              <input type="date" min={new Date().toISOString().split("T")[0]} value={deadline} onChange={(e) => setDeadline(e.target.value)} style={inputStyle} />
+            </Field>
+            {error && <div style={{ color: "#E8003D", fontSize: 12 }}>{error}</div>}
+            <div style={{ display: "flex", gap: 12 }}>
+              <button onClick={save} disabled={saving} className="btn-primary" style={{ width: "auto", padding: "0 28px" }}>
+                {saving ? "SALVANDO…" : "SALVAR"}
+              </button>
+              <button onClick={() => setEditing(false)} style={{ background: "transparent", border: "1px solid #2A2A2A", color: "#A0A0A0", textTransform: "uppercase", fontSize: 11, letterSpacing: "0.12em", height: 48, padding: "0 20px", cursor: "pointer", fontFamily: "'Space Grotesk', sans-serif" }}>
+                CANCELAR
+              </button>
+            </div>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+const inputStyle: React.CSSProperties = {
+  width: "100%", height: 44, padding: "0 14px",
+  background: "#111111", border: "1px solid #2A2A2A", color: "#FFFFFF",
+  fontFamily: "'JetBrains Mono', monospace", fontSize: 14,
+};
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: "#A0A0A0", marginBottom: 8 }}>{label}</div>
+      {children}
+    </div>
+  );
+}
+
+function PlanBox({ label, value, size }: { label: string; value: string; size: number }) {
+  return (
+    <div style={{ background: "#1A1A1A", border: "1px solid #2A2A2A", padding: 24 }}>
+      <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: "#A0A0A0", marginBottom: 12 }}>{label}</div>
+      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: size, color: "#FFFFFF", lineHeight: 1 }}>{value}</div>
+    </div>
+  );
+}
+
+/* ====================== Shared widgets ====================== */
 function ScoreRing({ value }: { value: number }) {
   const size = 160;
   const stroke = 8;
@@ -273,14 +706,8 @@ function ScoreRing({ value }: { value: number }) {
       <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#1A1A1A" strokeWidth={stroke} />
         <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          fill="none"
-          stroke="#E8003D"
-          strokeWidth={stroke}
-          strokeLinecap="butt"
-          strokeDasharray={circ}
+          cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#E8003D" strokeWidth={stroke}
+          strokeLinecap="butt" strokeDasharray={circ}
           className="grind-ring-arc"
           style={{ ["--ring-circ" as never]: `${circ}px`, ["--ring-target" as never]: `${target}px` }}
         />
@@ -302,10 +729,7 @@ function Metric({ name, value, unit, pct }: { name: string; value: string; unit?
         {unit && <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "#555555" }}>{unit}</span>}
       </div>
       <div style={{ height: 2, background: "#1A1A1A" }}>
-        <div
-          className="grind-bar-fill"
-          style={{ height: "100%", background: "#E8003D", width: 0, ["--bar-target" as never]: `${pct}%` }}
-        />
+        <div className="grind-bar-fill" style={{ height: "100%", background: "#E8003D", width: 0, ["--bar-target" as never]: `${pct}%` }} />
       </div>
     </div>
   );
@@ -327,12 +751,8 @@ function Trend() {
           const isToday = i === todayIdx;
           let bg = "#2A2A2A";
           let border = "none";
-          if (isToday) {
-            bg = "rgba(232, 0, 61, 0.3)";
-            border = "1px solid #E8003D";
-          } else if (isMax) {
-            bg = "#E8003D";
-          }
+          if (isToday) { bg = "rgba(232, 0, 61, 0.3)"; border = "1px solid #E8003D"; }
+          else if (isMax) { bg = "#E8003D"; }
           return (
             <div key={i} className="grind-trend-bar" style={{ height: h, background: bg, border }}>
               <span className="grind-trend-tip">{v}%</span>
