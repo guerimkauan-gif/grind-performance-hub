@@ -131,6 +131,31 @@ function OnboardingPage() {
             <h1 style={HEADLINE}>Qual é o seu sonho?</h1>
             <p style={BODY}>Escreva sem filtro. O que você quer alcançar? Seja específico.</p>
 
+            <div style={{ display: "grid", gap: 8, marginBottom: 20 }}>
+              <span style={INPUT_LABEL}>NOME DO SEU OBJETIVO</span>
+              <input
+                type="text"
+                value={goalName}
+                onChange={(e) => setGoalName(e.target.value)}
+                placeholder="Ex: Medicina USP, Empresa própria, Concurso federal"
+                className="grind-goal-input"
+                style={{
+                  height: 52,
+                  padding: "0 16px",
+                  background: "#111111",
+                  border: "1px solid #2A2A2A",
+                  color: "#FFFFFF",
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontWeight: 400,
+                  fontSize: 14,
+                  outline: "none",
+                  borderRadius: 0,
+                }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = "#E8003D")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "#2A2A2A")}
+              />
+            </div>
+
             <div style={{ display: "grid", gap: 8, marginBottom: 24 }}>
               <span style={INPUT_LABEL}>SEU OBJETIVO</span>
               <textarea
@@ -150,9 +175,14 @@ function OnboardingPage() {
                 }}
               />
             </div>
-            <button style={{ ...PRIMARY_BTN, filter: dream.trim().length < 10 ? "brightness(0.5)" : "none" }} disabled={dream.trim().length < 10} onClick={() => setStep(2)}>
-              CONTINUAR
-            </button>
+            {(() => {
+              const disabled = goalName.trim().length === 0 || dream.trim().length < 10;
+              return (
+                <button style={{ ...PRIMARY_BTN, filter: disabled ? "brightness(0.5)" : "none" }} disabled={disabled} onClick={() => setStep(2)}>
+                  CONTINUAR
+                </button>
+              );
+            })()}
           </div>
         )}
 
