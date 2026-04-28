@@ -82,6 +82,15 @@
   input::placeholder, textarea::placeholder {
     color: #555555;
   }
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #111111 inset !important;
+    -webkit-text-fill-color: #ffffff !important;
+    caret-color: #ffffff !important;
+    border-color: #2A2A2A !important;
+  }
 }
 
 @layer utilities {

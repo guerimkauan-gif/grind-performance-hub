@@ -134,7 +134,7 @@ function OnboardingPage() {
               <textarea
                 value={dream}
                 onChange={(e) => setDream(e.target.value)}
-                placeholder="Quero passar na FUVEST e estudar Medicina na USP até novembro deste ano."
+                placeholder="Quero construir uma empresa do zero — um produto real, com clientes reais, que resolva um problema que eu conheço por dentro. Quero provar para mim mesmo que consigo antes de completar 25 anos."
                 style={{
                   minHeight: 140,
                   padding: 16,
