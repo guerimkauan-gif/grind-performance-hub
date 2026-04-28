@@ -66,11 +66,13 @@ function LoginPage() {
             style={{
               fontFamily: "'Space Grotesk', sans-serif",
               fontWeight: 700,
-              fontSize: 28,
+              fontSize: 32,
               color: "#FFFFFF",
-              letterSpacing: "0.05em",
+              letterSpacing: "0.2em",
               lineHeight: 1,
               marginBottom: 8,
+              fontFeatureSettings: "normal",
+              fontVariant: "normal",
             }}
           >
             GRIND
