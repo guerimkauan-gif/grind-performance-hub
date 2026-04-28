@@ -168,13 +168,30 @@ function OnboardingPage() {
                 <input type="number" value={days} min={1} max={7} step={1} onChange={(e) => setDays(e.target.value)} style={inputStyle("mono")} />
               </FormField>
               <FormField label="QUAL É A SUA DATA LIMITE?">
-                <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} style={inputStyle("mono")} />
+                <input
+                  type="date"
+                  value={deadline}
+                  min={new Date().toISOString().split('T')[0]}
+                  onChange={(e) => setDeadline(e.target.value)}
+                  style={inputStyle("mono")}
+                />
+                {deadline && (parseInt(deadline.split('-')[0], 10) < 2025 || new Date(deadline) < new Date(new Date().toDateString())) && (
+                  <span style={{ fontSize: 12, color: "#E8003D", marginTop: 4 }}>
+                    Data inválida — escolha uma data futura
+                  </span>
+                )}
               </FormField>
             </div>
 
-            <button style={{ ...PRIMARY_BTN, filter: !hours || !days || !deadline ? "brightness(0.5)" : "none" }} disabled={!hours || !days || !deadline} onClick={() => setStep(3)}>
-              CONTINUAR
-            </button>
+            {(() => {
+              const deadlineInvalid = !deadline || parseInt(deadline.split('-')[0], 10) < 2025 || new Date(deadline) < new Date(new Date().toDateString());
+              const disabled = !hours || !days || deadlineInvalid;
+              return (
+                <button style={{ ...PRIMARY_BTN, filter: disabled ? "brightness(0.5)" : "none" }} disabled={disabled} onClick={() => setStep(3)}>
+                  CONTINUAR
+                </button>
+              );
+            })()}
           </div>
         )}
 
