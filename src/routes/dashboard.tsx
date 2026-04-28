@@ -321,8 +321,8 @@ function SectionHoje() {
             <div key={p.n} style={{ display: "grid", gridTemplateColumns: "48px 1fr", gap: 16, padding: "16px 0", borderTop: i === 0 ? "none" : "1px solid #2A2A2A" }}>
               <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 20, color: "#E8003D" }}>{p.n}</div>
               <div>
-                <div style={{ fontSize: 14, color: "#FFFFFF", lineHeight: 1.4 }}>{p.t}</div>
-                <div style={{ fontSize: 11, color: "#555555", textTransform: "uppercase", letterSpacing: "0.12em", marginTop: 6 }}>{p.c}</div>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 400, fontSize: 14, color: "#FFFFFF", lineHeight: 1.4 }}>{p.t}</div>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 400, fontSize: 11, color: "#555555", textTransform: "uppercase", letterSpacing: "0.12em", marginTop: 6 }}>{p.c}</div>
               </div>
             </div>
           ))}
