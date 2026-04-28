@@ -21,13 +21,25 @@ const SEP: React.CSSProperties = { height: 1, background: "#2A2A2A", margin: "12
 const DASH_STYLES = `
 @keyframes grind-ring-draw { from { stroke-dashoffset: var(--ring-circ); } to { stroke-dashoffset: var(--ring-target); } }
 @keyframes grind-bar-fill { from { width: 0%; } to { width: var(--bar-target); } }
-@keyframes grind-pulse-dot { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: 0.6; } }
+@keyframes grind-pulse-dot { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.4; } }
+@keyframes grind-pulse-ring { 0% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; } 100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; } }
 @keyframes grind-check-pop { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 @keyframes grind-strike { from { width: 0%; } to { width: 100%; } }
 .dash-logout:hover { border-color: #E8003D !important; color: #FFFFFF !important; }
 .grind-ring-arc { animation: grind-ring-draw 1.2s ease-out forwards; }
 .grind-bar-fill { animation: grind-bar-fill 0.8s ease-out forwards; }
-.grind-pulse-dot { display: inline-block; animation: grind-pulse-dot 2s ease-in-out infinite; }
+.grind-pulse-dot {
+  position: relative; display: inline-block; line-height: 1;
+  animation: grind-pulse-dot 1.5s ease-in-out infinite;
+}
+.grind-pulse-dot::after {
+  content: ""; position: absolute; left: 50%; top: 50%;
+  width: 0.7em; height: 0.7em; border-radius: 9999px;
+  background: #E8003D;
+  transform: translate(-50%, -50%) scale(1);
+  animation: grind-pulse-ring 1.5s ease-out infinite;
+  pointer-events: none;
+}
 .grind-check-pop { animation: grind-check-pop 150ms ease-out; }
 .grind-strike-wrap { position: relative; display: inline-block; }
 .grind-strike-wrap::after {
@@ -45,10 +57,10 @@ const DASH_STYLES = `
 .grind-trend-bar:hover .grind-trend-tip { opacity: 1; }
 `;
 
-function SectionLabel({ children, pulse }: { children: React.ReactNode; pulse?: boolean }) {
+function SectionLabel({ children }: { children: React.ReactNode; pulse?: boolean }) {
   return (
     <div style={LABEL}>
-      <span className={pulse ? "grind-pulse-dot" : ""} style={{ color: "#E8003D", marginRight: 8 }}>●</span>
+      <span className="grind-pulse-dot" style={{ color: "#E8003D", marginRight: 8 }}>●</span>
       {children}
     </div>
   );
