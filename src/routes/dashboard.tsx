@@ -30,6 +30,7 @@ const DASH_STYLES = `
 @keyframes grind-strike { from { width: 0%; } to { width: 100%; } }
 @keyframes grind-fade-in { from { opacity: 0; } to { opacity: 1; } }
 .dash-logout:hover { border-color: #E8003D !important; color: #FFFFFF !important; }
+.grind-edit-btn:hover { color: #E8003D !important; }
 .grind-ring-arc { animation: grind-ring-draw 1.2s ease-out forwards; }
 .grind-bar-fill { animation: grind-bar-fill 0.8s ease-out forwards; }
 .grind-fade-in { animation: grind-fade-in 150ms ease-out; }
@@ -566,6 +567,9 @@ function SectionObjetivo({ profile, userId, onSaved }: { profile: Profile | null
   const [deadline, setDeadline] = useState<string>(profile?.deadline ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editingGoal, setEditingGoal] = useState(false);
+  const [goalDraft, setGoalDraft] = useState<string>("");
+  const [savingGoal, setSavingGoal] = useState(false);
 
   useEffect(() => {
     setHours(profile?.daily_hours?.toString() ?? "");
@@ -604,16 +608,91 @@ function SectionObjetivo({ profile, userId, onSaved }: { profile: Profile | null
       <section>
         <SectionLabel>SEU SONHO</SectionLabel>
         <div style={SEP} />
-        <div style={{ borderLeft: "3px solid #E8003D", paddingLeft: 20 }}>
-          <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 28, color: "#FFFFFF", lineHeight: 1.2, margin: 0 }}>
-            {profile?.goal_name || "—"}
-          </div>
-          {profile?.dream && (
-            <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 400, fontSize: 15, color: "#A0A0A0", lineHeight: 1.6, margin: "12px 0 0 0" }}>
-              {profile.dream}
-            </p>
-          )}
-        </div>
+        {(() => {
+          const displayTitle = (profile?.goal_name && profile.goal_name.trim()) || profile?.dream || "—";
+          const startEdit = () => {
+            setGoalDraft(profile?.goal_name || profile?.dream || "");
+            setEditingGoal(true);
+          };
+          const cancelEdit = () => {
+            setEditingGoal(false);
+            setGoalDraft("");
+          };
+          const saveGoal = async () => {
+            if (!userId) return;
+            setSavingGoal(true);
+            const value = goalDraft.trim();
+            const { error } = await supabase.from("profiles").update({ goal_name: value }).eq("id", userId);
+            setSavingGoal(false);
+            if (error) return;
+            onSaved({ goal_name: value });
+            setEditingGoal(false);
+          };
+          return (
+            <div style={{ borderLeft: "3px solid #E8003D", paddingLeft: 20 }}>
+              {!editingGoal ? (
+                <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                  <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 28, color: "#FFFFFF", lineHeight: 1.2, margin: 0, textTransform: "uppercase" }}>
+                    {displayTitle}
+                  </div>
+                  <button
+                    onClick={startEdit}
+                    aria-label="Editar"
+                    className="grind-edit-btn"
+                    style={{ background: "transparent", border: "none", padding: 4, cursor: "pointer", color: "#555555", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
+                      <path d="M12 20h9" />
+                      <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                    </svg>
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gap: 12 }}>
+                  <input
+                    type="text"
+                    value={goalDraft}
+                    onChange={(e) => setGoalDraft(e.target.value)}
+                    autoFocus
+                    style={{
+                      height: 44,
+                      padding: "0 16px",
+                      background: "#111111",
+                      border: "1px solid #E8003D",
+                      borderRadius: 0,
+                      color: "#FFFFFF",
+                      fontFamily: "'Space Grotesk', sans-serif",
+                      fontWeight: 700,
+                      fontSize: 16,
+                      outline: "none",
+                      textTransform: "uppercase",
+                    }}
+                  />
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button
+                      onClick={saveGoal}
+                      disabled={savingGoal || goalDraft.trim().length === 0}
+                      style={{ height: 36, padding: "0 20px", background: "#E8003D", color: "#FFFFFF", border: "none", borderRadius: 0, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer", filter: savingGoal || goalDraft.trim().length === 0 ? "brightness(0.6)" : "none" }}
+                    >
+                      {savingGoal ? "..." : "SALVAR"}
+                    </button>
+                    <button
+                      onClick={cancelEdit}
+                      style={{ height: 36, padding: "0 20px", background: "transparent", color: "#A0A0A0", border: "1px solid #2A2A2A", borderRadius: 0, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer" }}
+                    >
+                      CANCELAR
+                    </button>
+                  </div>
+                </div>
+              )}
+              {profile?.dream && (
+                <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 400, fontSize: 15, color: "#A0A0A0", lineHeight: 1.6, margin: "12px 0 0 0" }}>
+                  {profile.dream}
+                </p>
+              )}
+            </div>
+          );
+        })()}
         <div style={{ fontSize: 11, color: "#555555", textTransform: "uppercase", letterSpacing: "0.12em", marginTop: 12 }}>
           Definido no seu onboarding
         </div>
