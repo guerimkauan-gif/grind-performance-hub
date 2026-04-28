@@ -95,6 +95,7 @@ function OnboardingPage() {
     const { error } = await supabase
       .from("profiles")
       .update({
+        goal_name: goalName,
         dream,
         daily_hours: parseFloat(hours),
         days_per_week: parseInt(days, 10),
