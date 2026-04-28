@@ -410,7 +410,7 @@ function SectionCorpo() {
               <div style={{ height: 2, background: "#0A0A0A", marginBottom: 12 }}>
                 <div className="grind-bar-fill" style={{ height: "100%", background: "#E8003D", width: 0, ["--bar-target" as never]: `${m.pct}%` }} />
               </div>
-              <div style={{ fontSize: 12, color: "#555555" }}>{m.note}</div>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 400, fontSize: 12, color: "#555555" }}>{m.note}</div>
             </div>
           ))}
         </div>
@@ -425,7 +425,7 @@ function SectionCorpo() {
       <section>
         <SectionLabel>ALERTA</SectionLabel>
         <div style={SEP} />
-        <div style={{ background: "#111111", borderLeft: "3px solid #E8003D", padding: "16px 20px", color: "#A0A0A0", fontSize: 14, lineHeight: 1.5 }}>
+        <div style={{ background: "#111111", borderLeft: "3px solid #E8003D", padding: "16px 20px", color: "#A0A0A0", fontSize: 14, lineHeight: 1.5, fontFamily: "'JetBrains Mono', monospace", fontWeight: 400 }}>
           HRV em queda nos últimos 3 dias — considere reduzir a carga amanhã.
         </div>
       </section>
@@ -691,7 +691,7 @@ function SectionObjetivo({ profile, userId, onSaved }: { profile: Profile | null
                 const showDream = dreamText.length > 0 && dreamText.toLowerCase() !== goalText.toLowerCase();
                 if (!showDream) return null;
                 return (
-                  <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 400, fontSize: 15, color: "#A0A0A0", lineHeight: 1.6, margin: "12px 0 0 0" }}>
+                  <p style={{ fontWeight: 400, fontSize: 15, color: "#A0A0A0", lineHeight: 1.6, margin: "12px 0 0 0" }}>
                     {profile?.dream}
                   </p>
                 );

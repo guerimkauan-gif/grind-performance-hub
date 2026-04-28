@@ -63,6 +63,10 @@
     color: #FFFFFF;
     font-family: 'Space Grotesk', system-ui, sans-serif;
   }
+  p {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 400;
+  }
   input, textarea, select {
     background-color: #111111 !important;
     color: #FFFFFF !important;
