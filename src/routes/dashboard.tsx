@@ -27,7 +27,7 @@ function DashboardPage() {
   return (
     <div className="min-h-screen" style={{ background: "#0A0A0A" }}>
       <header style={{ borderBottom: "1px solid #2A2A2A", padding: "20px 32px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div className="grind-logo" style={{ fontSize: 22 }}>GRIND</div>
+        <img src="/grind-logo.svg" alt="GRIND" height="28" style={{ display: 'block' }} />
         <button onClick={logout} className="label-uppercase" style={{ background: "transparent", border: "1px solid #2A2A2A", padding: "10px 18px", color: "#FFFFFF", cursor: "pointer" }}>
           SAIR
         </button>

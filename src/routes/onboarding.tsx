@@ -53,7 +53,7 @@ function OnboardingPage() {
     <div className="min-h-screen px-4 py-12" style={{ background: "#0A0A0A" }}>
       <div style={{ maxWidth: 640, margin: "0 auto" }}>
         <div className="flex items-center justify-between mb-10">
-          <div className="grind-logo" style={{ fontSize: 22 }}>GRIND</div>
+          <img src="/grind-logo.svg" alt="GRIND" height="28" style={{ display: 'block' }} />
           <div className="label-uppercase">PASSO {step} DE 4</div>
         </div>
 
@@ -147,7 +147,7 @@ function OnboardingPage() {
                 <span className="font-mono-metric">{deadline}</span>.
               </p>
               <div style={{ textAlign: "center", padding: "32px 0" }}>
-                <div className="grind-logo" style={{ fontSize: 64 }}>GRIND</div>
+                <img src="/grind-logo.svg" alt="GRIND" height="28" style={{ display: 'block', margin: '0 auto' }} />
               </div>
               {error && <div style={{ color: "#E8003D", fontSize: 13 }}>{error}</div>}
               <button className="btn-primary" onClick={finish} disabled={saving}>
