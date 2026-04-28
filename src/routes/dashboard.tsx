@@ -425,7 +425,7 @@ function SectionCorpo() {
       <section>
         <SectionLabel>ALERTA</SectionLabel>
         <div style={SEP} />
-        <div style={{ background: "#111111", borderLeft: "3px solid #E8003D", padding: "16px 20px", color: "#A0A0A0", fontSize: 14, lineHeight: 1.5 }}>
+        <div style={{ background: "#111111", borderLeft: "3px solid #E8003D", padding: "16px 20px", color: "#A0A0A0", fontSize: 14, lineHeight: 1.5, fontFamily: "'JetBrains Mono', monospace", fontWeight: 400 }}>
           HRV em queda nos últimos 3 dias — considere reduzir a carga amanhã.
         </div>
       </section>
