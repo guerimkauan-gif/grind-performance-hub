@@ -219,7 +219,7 @@ function DashboardPage() {
           <button className="grind-hamburger" aria-label="Menu" onClick={() => setDrawerOpen(true)}>
             <span /><span /><span />
           </button>
-          <GrindLogo size={28} />
+          <GrindLogo size={22} letterSpacing="0.15em" />
         </div>
 
         <nav className="grind-tabs-desktop">
@@ -241,7 +241,7 @@ function DashboardPage() {
           <div className="grind-drawer-overlay" onClick={() => setDrawerOpen(false)} />
           <aside className="grind-drawer">
             <div style={{ padding: "16px 24px" }}>
-              <GrindLogo size={28} />
+              <GrindLogo size={22} letterSpacing="0.15em" />
             </div>
             <div style={{ height: 1, background: "#2A2A2A" }} />
             {SECTIONS.map((s) => {
