@@ -68,6 +68,7 @@ function OnboardingPage() {
   const navigate = useNavigate();
   const { session, loading } = useAuth();
   const [step, setStep] = useState(1);
+  const [goalName, setGoalName] = useState("");
   const [dream, setDream] = useState("");
   const [hours, setHours] = useState("");
   const [days, setDays] = useState("");
