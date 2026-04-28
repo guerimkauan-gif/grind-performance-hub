@@ -1,4 +1,4 @@
-export function GrindLogo({ size = 28 }: { size?: number; height?: number }) {
+export function GrindLogo({ size = 32 }: { size?: number; height?: number }) {
   return (
     <span
       role="img"
@@ -7,10 +7,12 @@ export function GrindLogo({ size = 28 }: { size?: number; height?: number }) {
         fontFamily: "'Space Grotesk', Arial, sans-serif",
         fontWeight: 700,
         fontSize: size,
-        letterSpacing: "0.05em",
+        letterSpacing: "0.2em",
         color: "#FFFFFF",
         lineHeight: 1,
         display: "inline-block",
+        fontFeatureSettings: "normal",
+        fontVariant: "normal",
       }}
     >
       GRIND
