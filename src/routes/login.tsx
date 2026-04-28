@@ -66,7 +66,7 @@ function LoginPage() {
             style={{
               fontFamily: "'Space Grotesk', sans-serif",
               fontWeight: 700,
-              fontSize: 32,
+              fontSize: 40,
               color: "#FFFFFF",
               letterSpacing: "0.2em",
               lineHeight: 1,

@@ -110,7 +110,7 @@ function OnboardingPage() {
     <div style={{ background: "#0A0A0A", minHeight: "100vh" }}>
       {/* Header */}
       <header style={{ height: 56, borderBottom: "1px solid #2A2A2A", padding: "0 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <GrindLogo height={28} />
+        <GrindLogo size={22} letterSpacing="0.15em" />
         <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "#A0A0A0", letterSpacing: "0.05em" }}>
           PASSO {step} DE 4
         </div>
