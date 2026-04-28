@@ -30,12 +30,12 @@ const DASH_STYLES = `
 .grind-bar-fill { animation: grind-bar-fill 0.8s ease-out forwards; }
 .grind-live-square {
   position: relative; display: inline-block; vertical-align: middle;
-  width: 10px; height: 10px; background: #E8003D; border-radius: 0;
+  width: 6px; height: 6px; background: #E8003D; border-radius: 0;
   animation: grind-pulse-dot 1.5s ease-in-out infinite;
 }
 .grind-live-square::after {
   content: ""; position: absolute; left: 50%; top: 50%;
-  width: 10px; height: 10px; background: #E8003D; border-radius: 0;
+  width: 6px; height: 6px; background: #E8003D; border-radius: 0;
   transform: translate(-50%, -50%) scale(1);
   animation: grind-pulse-ring 1.5s ease-out infinite;
   pointer-events: none;
