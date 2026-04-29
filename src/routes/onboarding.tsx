@@ -109,6 +109,8 @@ function OnboardingPage() {
     navigate({ to: "/dashboard" });
   };
 
+  if (loading || !session) return <AuthLoader />;
+
   return (
     <div style={{ background: "#0A0A0A", minHeight: "100vh" }}>
       {/* Header */}
