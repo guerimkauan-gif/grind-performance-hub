@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 
 const PLACEHOLDER = { recovery_score: 75, hrv: 58, sleep_hours: 7.5, strain: 10.5 };
 
@@ -84,15 +85,33 @@ Responda APENAS com o JSON. Sem texto adicional.`;
 }
 
 export const getOrGenerateDailyPlan = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { supabase, userId } = context as { supabase: any; userId: string };
+  .inputValidator((data: { accessToken: string }) => data)
+  .handler(async ({ data }) => {
+    const SUPABASE_URL = process.env.SUPABASE_URL;
+    const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
+    const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+
+    if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+      return { ok: false, error: "Supabase env vars missing" };
+    }
+    if (!ANTHROPIC_API_KEY) {
+      return { ok: false, error: "ANTHROPIC_API_KEY not configured" };
+    }
+
+    const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      global: { headers: { Authorization: `Bearer ${data.accessToken}` } },
+      auth: { persistSession: false, autoRefreshToken: false, storage: undefined },
+    });
+
+    const claims = await supabase.auth.getClaims(data.accessToken);
+    const userId = claims.data?.claims?.sub;
+    if (!userId) return { ok: false, error: "Unauthorized" };
+
     const today = todayISO();
 
-    // 1. Check existing log
     const existing = await supabase
       .from("daily_logs")
-      .select("ai_plan, adherence_score, recovery_score, hrv, sleep_hours, strain")
+      .select("ai_plan")
       .eq("user_id", userId)
       .eq("log_date", today)
       .maybeSingle();
@@ -101,7 +120,6 @@ export const getOrGenerateDailyPlan = createServerFn({ method: "POST" })
       return { ok: true, plan: existing.data.ai_plan, cached: true };
     }
 
-    // 2. Fetch profile + history
     const [{ data: profile }, { data: history }] = await Promise.all([
       supabase
         .from("profiles")
@@ -118,12 +136,6 @@ export const getOrGenerateDailyPlan = createServerFn({ method: "POST" })
 
     if (!profile) return { ok: false, error: "Profile not found" };
 
-    const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-    if (!ANTHROPIC_API_KEY) {
-      return { ok: false, error: "ANTHROPIC_API_KEY not configured" };
-    }
-
-    // 3. Call Claude
     let aiText: string;
     try {
       const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -148,14 +160,13 @@ export const getOrGenerateDailyPlan = createServerFn({ method: "POST" })
         return { ok: false, error: `Claude API error ${res.status}` };
       }
 
-      const data = await res.json();
-      aiText = data?.content?.[0]?.text ?? "";
+      const json = await res.json();
+      aiText = json?.content?.[0]?.text ?? "";
     } catch (err) {
       console.error("Claude API request failed", err);
       return { ok: false, error: "Claude request failed" };
     }
 
-    // 4. Parse JSON (strip code fences if present)
     let parsed: any;
     try {
       const cleaned = aiText.trim().replace(/^```json\s*/i, "").replace(/^```\s*/, "").replace(/```$/, "").trim();
@@ -167,8 +178,7 @@ export const getOrGenerateDailyPlan = createServerFn({ method: "POST" })
 
     const adherence = typeof parsed.adherence_score === "number" ? parsed.adherence_score : 0;
 
-    // 5. Save
-    const { error: insertError } = await supabase.from("daily_logs").upsert(
+    const { error: upsertError } = await supabase.from("daily_logs").upsert(
       {
         user_id: userId,
         log_date: today,
@@ -182,9 +192,8 @@ export const getOrGenerateDailyPlan = createServerFn({ method: "POST" })
       { onConflict: "user_id,log_date" }
     );
 
-    if (insertError) {
-      console.error("Failed to save daily_log", insertError);
-      // Still return the plan even if save failed
+    if (upsertError) {
+      console.error("Failed to save daily_log", upsertError);
     }
 
     return { ok: true, plan: JSON.stringify(parsed), cached: false };
