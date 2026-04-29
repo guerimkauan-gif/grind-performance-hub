@@ -1,0 +1,1 @@
+DELETE FROM public.daily_logs WHERE log_date = CURRENT_DATE;
