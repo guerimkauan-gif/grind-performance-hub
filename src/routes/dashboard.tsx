@@ -363,15 +363,26 @@ function SectionHoje() {
               <p style={{ fontSize: 15, color: "#FFFFFF", lineHeight: 1.6, marginBottom: 24, borderLeft: "2px solid #E8003D", paddingLeft: 16, fontFamily: "'JetBrains Mono', monospace" }}>
                 {plan?.context ?? (planLoading ? "Gerando seu plano do dia..." : "—")}
               </p>
-              {(plan?.priorities ?? []).map((p, i) => (
-                <div key={p.number} style={{ display: "grid", gridTemplateColumns: "48px 1fr", gap: 16, padding: "16px 0", borderTop: i === 0 ? "none" : "1px solid #2A2A2A" }}>
-                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 20, color: "#E8003D" }}>{p.number}</div>
+              {(plan?.observations ?? []).map((o, i) => (
+                <div key={o.number} style={{ display: "grid", gridTemplateColumns: "48px 1fr", gap: 16, padding: "16px 0", borderTop: i === 0 ? "none" : "1px solid #2A2A2A" }}>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 20, color: "#E8003D" }}>{o.number}</div>
                   <div>
-                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 400, fontSize: 14, color: "#FFFFFF", lineHeight: 1.4 }}>{p.task}</div>
-                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 400, fontSize: 11, color: "#555555", textTransform: "uppercase", letterSpacing: "0.12em", marginTop: 6 }}>{p.category}</div>
+                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, fontSize: 11, color: "#555555", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 6 }}>{o.metric}</div>
+                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 400, fontSize: 14, color: "#A0A0A0", lineHeight: 1.5 }}>{o.insight}</div>
                   </div>
                 </div>
               ))}
+              {plan?.recommendation && (
+                <div style={{ marginTop: 24 }}>
+                  <div style={{ ...LABEL, display: "inline-flex", alignItems: "center", gap: 8, border: "1px solid #2A2A2A", padding: "4px 10px", letterSpacing: "0.12em", marginBottom: 12 }}>
+                    <span style={{ width: 6, height: 6, background: "#E8003D", display: "inline-block" }} aria-hidden="true" />
+                    <span>RECOMENDAÇÃO DO DIA</span>
+                  </div>
+                  <p style={{ fontSize: 14, color: "#FFFFFF", lineHeight: 1.6, borderLeft: "2px solid #E8003D", paddingLeft: 16, fontFamily: "'JetBrains Mono', monospace", margin: 0 }}>
+                    {plan.recommendation}
+                  </p>
+                </div>
+              )}
             </>
           )}
         </section>
