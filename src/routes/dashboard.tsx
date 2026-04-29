@@ -314,6 +314,19 @@ function SectionHoje() {
   const [plan, setPlan] = useState<AiPlan | null>(null);
   const [planError, setPlanError] = useState<string | null>(null);
   const [planLoading, setPlanLoading] = useState(true);
+  const [profile, setProfile] = useState<{ created_at: string | null; deadline: string | null } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: sess } = await supabase.auth.getSession();
+      const uid = sess.session?.user.id;
+      if (!uid) return;
+      const { data } = await supabase.from("profiles").select("created_at,deadline").eq("id", uid).maybeSingle();
+      if (!cancelled && data) setProfile({ created_at: data.created_at, deadline: data.deadline });
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -388,10 +401,24 @@ function SectionHoje() {
         <section>
           <SectionLabel>SCORE DO OBJETIVO</SectionLabel>
           <div style={SEP} />
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 12 }}>
-            <ScoreRing value={Math.max(0, Math.min(100, Math.round(plan?.adherence_score ?? 75)))} />
-            <div style={{ ...LABEL, color: "#555555" }}>ADERÊNCIA AO PLANO</div>
-          </div>
+          {(() => {
+            const _today = new Date(); _today.setHours(0, 0, 0, 0);
+            const _start = profile?.created_at ? new Date(profile.created_at) : null;
+            const _deadline = profile?.deadline ? new Date(profile.deadline) : null;
+            const _total = _start && _deadline ? Math.max(1, Math.ceil((_deadline.getTime() - _start.getTime()) / 86400000)) : 0;
+            const _elapsed = _start ? Math.max(1, Math.min(_total || 9999, Math.floor((_today.getTime() - _start.getTime()) / 86400000) + 1)) : 0;
+            return (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 14 }}>
+                <ScoreRing value={Math.max(0, Math.min(100, Math.round(plan?.adherence_score ?? 75)))} />
+                {_total > 0 && (
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#A0A0A0", textTransform: "uppercase", letterSpacing: "0.12em" }}>
+                    DIA {_elapsed} DE {_total}
+                  </div>
+                )}
+                <div style={{ ...LABEL, color: "#555555" }}>ADERÊNCIA AO PLANO</div>
+              </div>
+            );
+          })()}
         </section>
 
         <section>
@@ -886,8 +913,8 @@ function PlanBox({ label, value, size }: { label: string; value: string; size: n
 
 /* ====================== Shared widgets ====================== */
 function ScoreRing({ value }: { value: number }) {
-  const size = 160;
-  const stroke = 8;
+  const size = 180;
+  const stroke = 3;
   const r = (size - stroke) / 2;
   const circ = 2 * Math.PI * r;
   const target = circ * (1 - value / 100);
@@ -902,9 +929,8 @@ function ScoreRing({ value }: { value: number }) {
           style={{ ["--ring-circ" as never]: `${circ}px`, ["--ring-target" as never]: `${target}px` }}
         />
       </svg>
-      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>
-        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 48, color: "#E8003D" }}>{value}</span>
-        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, color: "#555555", marginTop: 4 }}>%</span>
+      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>
+        <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 84, color: "#FFFFFF", letterSpacing: "-0.04em" }}>{value}</span>
       </div>
     </div>
   );
