@@ -136,9 +136,13 @@ export const getOrGenerateDailyPlan = createServerFn({ method: "POST" })
 
     if (!profile) return { ok: false, error: "Profile not found" };
 
+    console.log("API key exists:", !!ANTHROPIC_API_KEY);
+    console.log("API key starts with:", ANTHROPIC_API_KEY?.substring(0, 15));
+
+    // TEMP DIAGNOSTIC: minimal Claude call
     let aiText: string;
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -147,24 +151,32 @@ export const getOrGenerateDailyPlan = createServerFn({ method: "POST" })
         },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
-          max_tokens: 800,
-          system:
-            "Você é o sistema de IA do GRIND — um app de performance pessoal que conecta dados biométricos ao objetivo de vida do usuário. Seu tom é direto, motivador e honesto. Nunca enrola. Fala como um coach de elite que respeita o tempo do usuário.",
-          messages: [{ role: "user", content: buildUserPrompt(profile, history ?? []) }],
+          max_tokens: 100,
+          messages: [{ role: "user", content: "Responda apenas: FUNCIONOU" }],
         }),
       });
 
-      if (!res.ok) {
-        const body = await res.text();
-        console.error("Claude API error", res.status, body);
-        return { ok: false, error: `Claude API error ${res.status}` };
+      const responseText = await response.text();
+      console.log("Claude API status:", response.status);
+      console.log("Claude API response:", responseText);
+
+      if (!response.ok) {
+        return {
+          ok: false,
+          error: `Claude API error: ${response.status} - ${responseText}`,
+        };
       }
 
-      const json = await res.json();
+      const json = JSON.parse(responseText);
       aiText = json?.content?.[0]?.text ?? "";
-    } catch (err) {
+      // Return raw diagnostic result immediately so the dashboard shows it
+      return {
+        ok: false,
+        error: `DIAGNOSTIC OK (${response.status}): ${aiText}`,
+      };
+    } catch (err: any) {
       console.error("Claude API request failed", err);
-      return { ok: false, error: "Claude request failed" };
+      return { ok: false, error: `Claude request threw: ${err?.message ?? String(err)}` };
     }
 
     let parsed: any;
