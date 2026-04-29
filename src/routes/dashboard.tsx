@@ -1274,11 +1274,12 @@ const SLIDER_CSS = `
 }
 .grind-range::-webkit-slider-thumb {
   -webkit-appearance: none; appearance: none;
-  width: 16px; height: 16px; background: #E8003D;
+  width: 10px; height: 10px; background: #E8003D;
   border: none; border-radius: 0; cursor: pointer;
+  margin-top: -4px;
 }
 .grind-range::-moz-range-thumb {
-  width: 16px; height: 16px; background: #E8003D;
+  width: 10px; height: 10px; background: #E8003D;
   border: none; border-radius: 0; cursor: pointer;
 }
 .grind-energy-btn {
