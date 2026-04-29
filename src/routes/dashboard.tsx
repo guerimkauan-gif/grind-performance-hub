@@ -432,11 +432,6 @@ function SectionHoje() {
           )}
         </section>
 
-        <section>
-          <SectionLabel>TAREFAS DO DIA</SectionLabel>
-          <div style={SEP} />
-          <DailyChecklist />
-        </section>
       </div>
 
       {/* RIGHT */}
