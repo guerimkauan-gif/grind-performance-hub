@@ -286,6 +286,14 @@ function OnboardingPage() {
   );
 }
 
+function formatDeadline(d?: string | null) {
+  if (!d) return "—";
+  const months = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
+  const [y, m, day] = d.split("-").map(Number);
+  if (!y || !m || !day) return "—";
+  return `${String(day).padStart(2, "0")} ${months[m - 1]} ${y}`;
+}
+
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #2A2A2A", fontFamily: "'JetBrains Mono', monospace", fontSize: 13 }}>
