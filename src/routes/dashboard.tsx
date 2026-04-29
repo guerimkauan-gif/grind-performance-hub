@@ -30,6 +30,21 @@ const DASH_STYLES = `
 @keyframes grind-check-pop { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 @keyframes grind-strike { from { width: 0%; } to { width: 100%; } }
 @keyframes grind-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes grind-content-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes grind-loader-dot {
+  0%, 100% { opacity: 0.15; }
+  20% { opacity: 1; }
+  60% { opacity: 0.15; }
+}
+.grind-loader-dot {
+  width: 6px; height: 6px; background: #E8003D; border-radius: 0;
+  display: inline-block; opacity: 0.15;
+  animation: grind-loader-dot 1.2s ease-in-out infinite;
+}
+.grind-loader-dot:nth-child(1) { animation-delay: 0s; }
+.grind-loader-dot:nth-child(2) { animation-delay: 0.4s; }
+.grind-loader-dot:nth-child(3) { animation-delay: 0.8s; }
+.grind-content-fade-in { animation: grind-content-fade-in 300ms ease-out; }
 .dash-logout:hover { border-color: #E8003D !important; color: #FFFFFF !important; }
 .grind-edit-btn:hover { color: #E8003D !important; }
 .grind-ring-arc { animation: grind-ring-draw 1.2s ease-out forwards; }
