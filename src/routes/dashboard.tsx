@@ -314,6 +314,19 @@ function SectionHoje() {
   const [plan, setPlan] = useState<AiPlan | null>(null);
   const [planError, setPlanError] = useState<string | null>(null);
   const [planLoading, setPlanLoading] = useState(true);
+  const [profile, setProfile] = useState<{ created_at: string | null; deadline: string | null } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: sess } = await supabase.auth.getSession();
+      const uid = sess.session?.user.id;
+      if (!uid) return;
+      const { data } = await supabase.from("profiles").select("created_at,deadline").eq("id", uid).maybeSingle();
+      if (!cancelled && data) setProfile({ created_at: data.created_at, deadline: data.deadline });
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
