@@ -343,33 +343,37 @@ function SectionHoje() {
           <SectionLabel>SCORE DO OBJETIVO</SectionLabel>
           <div style={SEP} />
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 12 }}>
-            <ScoreRing value={87} />
+            <ScoreRing value={plan?.adherence_score ?? 0} />
             <div style={{ ...LABEL, color: "#555555" }}>ADERÊNCIA AO PLANO</div>
           </div>
-          <p style={{ fontSize: 13, color: "#A0A0A0", marginTop: 16, lineHeight: 1.6 }}>
-            No ritmo atual você completa o plano 3 dias antes do prazo.
+          <p style={{ fontSize: 13, color: "#A0A0A0", marginTop: 16, lineHeight: 1.6, fontFamily: "'JetBrains Mono', monospace" }}>
+            {plan?.projection ?? (planLoading ? "Calculando projeção..." : "—")}
           </p>
         </section>
 
         <section>
           <SectionLabel>PLANO DO DIA</SectionLabel>
           <div style={SEP} />
-          <p style={{ fontSize: 15, color: "#FFFFFF", lineHeight: 1.6, marginBottom: 24, borderLeft: "2px solid #E8003D", paddingLeft: 16 }}>
-            Seu corpo está bem recuperado hoje. HRV estável indica mente apta para foco profundo.
-          </p>
-          {[
-            { n: "01", t: "Avançar no conteúdo mais difícil agora", c: "FOCO PROFUNDO" },
-            { n: "02", t: "Revisão moderada no período da tarde", c: "REVISÃO" },
-            { n: "03", t: "Dormir até 23h para manter o ritmo amanhã", c: "RECUPERAÇÃO" },
-          ].map((p, i) => (
-            <div key={p.n} style={{ display: "grid", gridTemplateColumns: "48px 1fr", gap: 16, padding: "16px 0", borderTop: i === 0 ? "none" : "1px solid #2A2A2A" }}>
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 20, color: "#E8003D" }}>{p.n}</div>
-              <div>
-                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 400, fontSize: 14, color: "#FFFFFF", lineHeight: 1.4 }}>{p.t}</div>
-                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 400, fontSize: 11, color: "#555555", textTransform: "uppercase", letterSpacing: "0.12em", marginTop: 6 }}>{p.c}</div>
-              </div>
-            </div>
-          ))}
+          {planError ? (
+            <p style={{ fontSize: 14, color: "#A0A0A0", lineHeight: 1.6, fontFamily: "'JetBrains Mono', monospace" }}>
+              {planError}
+            </p>
+          ) : (
+            <>
+              <p style={{ fontSize: 15, color: "#FFFFFF", lineHeight: 1.6, marginBottom: 24, borderLeft: "2px solid #E8003D", paddingLeft: 16, fontFamily: "'JetBrains Mono', monospace" }}>
+                {plan?.context ?? (planLoading ? "Gerando seu plano do dia..." : "—")}
+              </p>
+              {(plan?.priorities ?? []).map((p, i) => (
+                <div key={p.number} style={{ display: "grid", gridTemplateColumns: "48px 1fr", gap: 16, padding: "16px 0", borderTop: i === 0 ? "none" : "1px solid #2A2A2A" }}>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 20, color: "#E8003D" }}>{p.number}</div>
+                  <div>
+                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 400, fontSize: 14, color: "#FFFFFF", lineHeight: 1.4 }}>{p.task}</div>
+                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 400, fontSize: 11, color: "#555555", textTransform: "uppercase", letterSpacing: "0.12em", marginTop: 6 }}>{p.category}</div>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
         </section>
 
         <section>
