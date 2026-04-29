@@ -178,35 +178,4 @@ export const getOrGenerateDailyPlan = createServerFn({ method: "POST" })
       console.error("Claude API request failed", err);
       return { ok: false, error: `Claude request threw: ${err?.message ?? String(err)}` };
     }
-
-    let parsed: any;
-    try {
-      const cleaned = aiText.trim().replace(/^```json\s*/i, "").replace(/^```\s*/, "").replace(/```$/, "").trim();
-      parsed = JSON.parse(cleaned);
-    } catch (err) {
-      console.error("Failed to parse Claude response", err, aiText);
-      return { ok: false, error: "Invalid AI response" };
-    }
-
-    const adherence = typeof parsed.adherence_score === "number" ? parsed.adherence_score : 0;
-
-    const { error: upsertError } = await supabase.from("daily_logs").upsert(
-      {
-        user_id: userId,
-        log_date: today,
-        recovery_score: PLACEHOLDER.recovery_score,
-        hrv: PLACEHOLDER.hrv,
-        sleep_hours: PLACEHOLDER.sleep_hours,
-        strain: PLACEHOLDER.strain,
-        ai_plan: JSON.stringify(parsed),
-        adherence_score: adherence,
-      },
-      { onConflict: "user_id,log_date" }
-    );
-
-    if (upsertError) {
-      console.error("Failed to save daily_log", upsertError);
-    }
-
-    return { ok: true, plan: JSON.stringify(parsed), cached: false };
   });
