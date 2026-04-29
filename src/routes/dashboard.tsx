@@ -186,8 +186,13 @@ const IconCalendar = () => (
     <rect x="3" y="5" width="18" height="16" /><line x1="3" y1="10" x2="21" y2="10" /><line x1="8" y1="3" x2="8" y2="7" /><line x1="16" y1="3" x2="16" y2="7" />
   </svg>
 );
+const IconChecklist = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555555" strokeWidth="2">
+    <polyline points="3 7 5 9 9 5" /><polyline points="3 15 5 17 9 13" /><line x1="13" y1="7" x2="21" y2="7" /><line x1="13" y1="15" x2="21" y2="15" />
+  </svg>
+);
 const ICONS: Record<SectionKey, () => React.ReactElement> = {
-  HOJE: IconSun, CORPO: IconPulse, PROGRESSO: IconBars, "CALENDÁRIO": IconCalendar, OBJETIVO: IconTarget,
+  HOJE: IconSun, CORPO: IconPulse, PROGRESSO: IconBars, "CALENDÁRIO": IconCalendar, TAREFAS: IconChecklist, OBJETIVO: IconTarget,
 };
 
 type Profile = {
