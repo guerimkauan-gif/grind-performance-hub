@@ -192,7 +192,25 @@ export const getOrGenerateDailyPlan = createServerFn({ method: "POST" })
       return { ok: false, error: "Invalid AI response" };
     }
 
-    const adherence = typeof parsed.adherence_score === "number" ? parsed.adherence_score : 0;
+    // Adherence: clamp to 0-100 integer; default 75 if missing/invalid
+    let adherence = 75;
+    const rawAdh = parsed.adherence_score;
+    if (typeof rawAdh === "number" && Number.isFinite(rawAdh)) {
+      adherence = Math.max(0, Math.min(100, Math.round(rawAdh)));
+    }
+    parsed.adherence_score = adherence;
+
+    // Override projection for users with little/no history
+    const historyCount = history?.length ?? 0;
+    if (historyCount === 0) {
+      parsed.projection =
+        "Primeiro dia registrado. Complete seu plano hoje para começar a construir seu histórico.";
+    } else if (historyCount < 3) {
+      // Strip negative tone — keep only if it sounds neutral/positive
+      if (!parsed.projection || /perd|atras|fora do|negativ|abaixo/i.test(String(parsed.projection))) {
+        parsed.projection = `Construindo consistência. ${historyCount} dia(s) registrado(s) — continue para ver projeções reais.`;
+      }
+    }
 
     const { error: upsertError } = await supabase.from("daily_logs").upsert(
       {
