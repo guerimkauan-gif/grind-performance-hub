@@ -305,12 +305,6 @@ type AiPlan = {
 };
 
 function SectionHoje() {
-  const [tasks, setTasks] = useState([
-    { label: "4h de estudo focado", done: false },
-    { label: "Revisão de flashcards", done: true },
-    { label: "Dormir antes das 23h", done: false },
-  ]);
-  const [popKey, setPopKey] = useState<Record<number, number>>({});
   const [plan, setPlan] = useState<AiPlan | null>(null);
   const [planError, setPlanError] = useState<string | null>(null);
   const [planLoading, setPlanLoading] = useState(true);
