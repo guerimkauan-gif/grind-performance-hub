@@ -128,7 +128,7 @@ export const getOrGenerateDailyPlan = createServerFn({ method: "POST" })
           model: "claude-sonnet-4-5",
           max_tokens: 800,
           system:
-            "Você é o sistema de IA do GRIND — um app de performance pessoal que conecta dados biométricos ao objetivo de vida do usuário. Seu tom é direto, motivador e honesto. Nunca enrola. Fala como um coach de elite que respeita o tempo do usuário.",
+            "Você é o sistema de IA do GRIND — um app de performance pessoal que conecta dados biométricos ao objetivo de vida do usuário. Seu tom é direto, informativo e sem exageros. Você não prescreve tarefas — você informa o usuário sobre o estado do próprio corpo e o que isso significa para o dia.",
           messages: [{ role: "user", content: buildUserPrompt(profile, history ?? []) }],
         }),
       });
