@@ -281,6 +281,13 @@ function DashboardPage() {
 }
 
 /* ====================== HOJE (original dashboard content) ====================== */
+type AiPlan = {
+  context: string;
+  priorities: { number: string; task: string; category: string }[];
+  projection: string;
+  adherence_score: number;
+};
+
 function SectionHoje() {
   const [tasks, setTasks] = useState([
     { label: "4h de estudo focado", done: false },
@@ -288,6 +295,40 @@ function SectionHoje() {
     { label: "Dormir antes das 23h", done: false },
   ]);
   const [popKey, setPopKey] = useState<Record<number, number>>({});
+  const [plan, setPlan] = useState<AiPlan | null>(null);
+  const [planError, setPlanError] = useState<string | null>(null);
+  const [planLoading, setPlanLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: sess } = await supabase.auth.getSession();
+        const token = sess.session?.access_token;
+        if (!token) { if (!cancelled) setPlanLoading(false); return; }
+        const { getOrGenerateDailyPlan } = await import("@/server/dailyPlan.functions");
+        const result = await getOrGenerateDailyPlan({ data: { accessToken: token } });
+        if (cancelled) return;
+        if (result.ok && result.plan) {
+          try {
+            setPlan(JSON.parse(result.plan));
+          } catch {
+            setPlanError("Não foi possível gerar seu plano hoje. Tente novamente mais tarde.");
+          }
+        } else {
+          console.error("Daily plan error:", result.error);
+          setPlanError("Não foi possível gerar seu plano hoje. Tente novamente mais tarde.");
+        }
+      } catch (err) {
+        console.error("Daily plan request failed", err);
+        if (!cancelled) setPlanError("Não foi possível gerar seu plano hoje. Tente novamente mais tarde.");
+      } finally {
+        if (!cancelled) setPlanLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   const toggleTask = (i: number) => {
     setTasks((prev) => prev.map((x, idx) => idx === i ? { ...x, done: !x.done } : x));
     setPopKey((p) => ({ ...p, [i]: (p[i] || 0) + 1 }));
