@@ -930,7 +930,7 @@ function ScoreRing({ value }: { value: number }) {
         />
       </svg>
       <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>
-        <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 84, color: "#FFFFFF", letterSpacing: "-0.04em" }}>{value}</span>
+        <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 68, color: "#FFFFFF", letterSpacing: "-0.04em" }}>{value}</span>
       </div>
     </div>
   );
