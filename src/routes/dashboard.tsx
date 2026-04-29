@@ -641,6 +641,19 @@ function SummaryStat({ label, value, color }: { label: string; value: string; co
 }
 
 /* ====================== OBJETIVO ====================== */
+/* ====================== TAREFAS ====================== */
+function SectionTarefas() {
+  return (
+    <div style={{ maxWidth: 800, margin: "0 auto", display: "grid", gap: 24 }}>
+      <section>
+        <SectionLabel>TAREFAS DO DIA</SectionLabel>
+        <div style={SEP} />
+        <DailyChecklist />
+      </section>
+    </div>
+  );
+}
+
 function SectionObjetivo({ profile, userId, onSaved }: { profile: Profile | null; userId?: string; onSaved: (p: Partial<Profile>) => void }) {
   const [editing, setEditing] = useState(false);
   const [hours, setHours] = useState<string>(profile?.daily_hours?.toString() ?? "");
