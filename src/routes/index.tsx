@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { AuthLoader } from "@/components/AuthLoader";
 
 export const Route = createFileRoute("/")({
   component: IndexRedirect,
@@ -28,9 +29,5 @@ function IndexRedirect() {
     })();
   }, [session, loading, navigate]);
 
-  return (
-    <div className="flex min-h-screen items-center justify-center" style={{ background: "#0A0A0A" }}>
-      <p className="label-uppercase">CARREGANDO</p>
-    </div>
-  );
+  return <AuthLoader />;
 }
