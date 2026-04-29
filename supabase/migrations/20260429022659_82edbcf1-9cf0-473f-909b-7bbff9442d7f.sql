@@ -1,0 +1,1 @@
+ALTER TABLE public.daily_logs ADD CONSTRAINT daily_logs_user_date_unique UNIQUE (user_id, log_date);
