@@ -913,8 +913,8 @@ function PlanBox({ label, value, size }: { label: string; value: string; size: n
 
 /* ====================== Shared widgets ====================== */
 function ScoreRing({ value }: { value: number }) {
-  const size = 160;
-  const stroke = 8;
+  const size = 180;
+  const stroke = 3;
   const r = (size - stroke) / 2;
   const circ = 2 * Math.PI * r;
   const target = circ * (1 - value / 100);
@@ -929,9 +929,8 @@ function ScoreRing({ value }: { value: number }) {
           style={{ ["--ring-circ" as never]: `${circ}px`, ["--ring-target" as never]: `${target}px` }}
         />
       </svg>
-      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>
-        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 48, color: "#E8003D" }}>{value}</span>
-        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, color: "#555555", marginTop: 4 }}>%</span>
+      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>
+        <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 84, color: "#FFFFFF", letterSpacing: "-0.04em" }}>{value}</span>
       </div>
     </div>
   );
