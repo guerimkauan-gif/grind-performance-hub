@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { GrindLogo } from "@/components/GrindLogo";
+import { AuthLoader } from "@/components/AuthLoader";
 
 export const Route = createFileRoute("/onboarding")({
   component: OnboardingPage,
