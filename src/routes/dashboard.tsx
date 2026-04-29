@@ -921,7 +921,7 @@ function ScoreRing({ value }: { value: number }) {
   return (
     <div style={{ position: "relative", width: size, height: size }}>
       <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#1A1A1A" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#2A2A2A" strokeWidth={stroke} />
         <circle
           cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#E8003D" strokeWidth={stroke}
           strokeLinecap="butt" strokeDasharray={circ}
@@ -930,7 +930,7 @@ function ScoreRing({ value }: { value: number }) {
         />
       </svg>
       <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>
-        <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 84, color: "#FFFFFF", letterSpacing: "-0.04em" }}>{value}</span>
+        <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 68, color: "#FFFFFF", letterSpacing: "-0.04em" }}>{value}</span>
       </div>
     </div>
   );
