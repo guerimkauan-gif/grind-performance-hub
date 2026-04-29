@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           adherence_score: number | null
           ai_plan: string | null
+          checkin_data: Json | null
           created_at: string
           hrv: number | null
           id: string
@@ -33,6 +34,7 @@ export type Database = {
         Insert: {
           adherence_score?: number | null
           ai_plan?: string | null
+          checkin_data?: Json | null
           created_at?: string
           hrv?: number | null
           id?: string
@@ -48,6 +50,7 @@ export type Database = {
         Update: {
           adherence_score?: number | null
           ai_plan?: string | null
+          checkin_data?: Json | null
           created_at?: string
           hrv?: number | null
           id?: string
