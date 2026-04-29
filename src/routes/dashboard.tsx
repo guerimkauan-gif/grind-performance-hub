@@ -10,8 +10,8 @@ export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
 });
 
-type SectionKey = "HOJE" | "CORPO" | "PROGRESSO" | "CALENDÁRIO" | "OBJETIVO";
-const SECTIONS: SectionKey[] = ["HOJE", "CORPO", "PROGRESSO", "CALENDÁRIO", "OBJETIVO"];
+type SectionKey = "HOJE" | "CORPO" | "PROGRESSO" | "CALENDÁRIO" | "TAREFAS" | "OBJETIVO";
+const SECTIONS: SectionKey[] = ["HOJE", "CORPO", "PROGRESSO", "CALENDÁRIO", "TAREFAS", "OBJETIVO"];
 
 const LABEL: React.CSSProperties = {
   fontSize: 11,
@@ -186,8 +186,13 @@ const IconCalendar = () => (
     <rect x="3" y="5" width="18" height="16" /><line x1="3" y1="10" x2="21" y2="10" /><line x1="8" y1="3" x2="8" y2="7" /><line x1="16" y1="3" x2="16" y2="7" />
   </svg>
 );
+const IconChecklist = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555555" strokeWidth="2">
+    <polyline points="3 7 5 9 9 5" /><polyline points="3 15 5 17 9 13" /><line x1="13" y1="7" x2="21" y2="7" /><line x1="13" y1="15" x2="21" y2="15" />
+  </svg>
+);
 const ICONS: Record<SectionKey, () => React.ReactElement> = {
-  HOJE: IconSun, CORPO: IconPulse, PROGRESSO: IconBars, "CALENDÁRIO": IconCalendar, OBJETIVO: IconTarget,
+  HOJE: IconSun, CORPO: IconPulse, PROGRESSO: IconBars, "CALENDÁRIO": IconCalendar, TAREFAS: IconChecklist, OBJETIVO: IconTarget,
 };
 
 type Profile = {
@@ -290,6 +295,7 @@ function DashboardPage() {
         {section === "CORPO" && <SectionCorpo />}
         {section === "PROGRESSO" && <SectionProgresso />}
         {section === "CALENDÁRIO" && <SectionCalendario />}
+        {section === "TAREFAS" && <SectionTarefas />}
         {section === "OBJETIVO" && <SectionObjetivo profile={profile} userId={session?.user.id} onSaved={(p) => setProfile((cur) => cur ? { ...cur, ...p } : cur)} />}
       </main>
     </div>
@@ -427,11 +433,6 @@ function SectionHoje() {
           )}
         </section>
 
-        <section>
-          <SectionLabel>TAREFAS DO DIA</SectionLabel>
-          <div style={SEP} />
-          <DailyChecklist />
-        </section>
       </div>
 
       {/* RIGHT */}
@@ -640,6 +641,19 @@ function SummaryStat({ label, value, color }: { label: string; value: string; co
 }
 
 /* ====================== OBJETIVO ====================== */
+/* ====================== TAREFAS ====================== */
+function SectionTarefas() {
+  return (
+    <div style={{ maxWidth: 800, margin: "0 auto", display: "grid", gap: 24 }}>
+      <section>
+        <SectionLabel>TAREFAS DO DIA</SectionLabel>
+        <div style={SEP} />
+        <DailyChecklist />
+      </section>
+    </div>
+  );
+}
+
 function SectionObjetivo({ profile, userId, onSaved }: { profile: Profile | null; userId?: string; onSaved: (p: Partial<Profile>) => void }) {
   const [editing, setEditing] = useState(false);
   const [hours, setHours] = useState<string>(profile?.daily_hours?.toString() ?? "");
