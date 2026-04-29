@@ -283,8 +283,8 @@ function DashboardPage() {
 /* ====================== HOJE (original dashboard content) ====================== */
 type AiPlan = {
   context: string;
-  priorities: { number: string; task: string; category: string }[];
-  projection: string;
+  observations: { number: string; metric: string; insight: string }[];
+  recommendation: string;
   adherence_score: number;
 };
 
