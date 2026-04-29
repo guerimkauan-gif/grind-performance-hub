@@ -1,0 +1,1 @@
+alter table public.daily_logs add column if not exists tasks_list jsonb not null default '[]'::jsonb;

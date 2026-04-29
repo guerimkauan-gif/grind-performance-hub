@@ -26,6 +26,7 @@ export type Database = {
           sleep_hours: number | null
           strain: number | null
           tasks_completed: number
+          tasks_list: Json
           tasks_total: number
           user_id: string
         }
@@ -40,6 +41,7 @@ export type Database = {
           sleep_hours?: number | null
           strain?: number | null
           tasks_completed?: number
+          tasks_list?: Json
           tasks_total?: number
           user_id: string
         }
@@ -54,6 +56,7 @@ export type Database = {
           sleep_hours?: number | null
           strain?: number | null
           tasks_completed?: number
+          tasks_list?: Json
           tasks_total?: number
           user_id?: string
         }
