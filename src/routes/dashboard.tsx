@@ -350,8 +350,42 @@ function SectionHoje() {
   };
   const completed = tasks.filter((t) => t.done).length;
 
+  if (planLoading) {
+    return (
+      <div
+        style={{
+          minHeight: "calc(100vh - 56px - 64px)",
+          background: "#0A0A0A",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 32,
+        }}
+      >
+        <GrindLogo size={32} letterSpacing="0.2em" />
+        <div style={{ display: "flex", gap: 8 }}>
+          <span className="grind-loader-dot" />
+          <span className="grind-loader-dot" />
+          <span className="grind-loader-dot" />
+        </div>
+        <div
+          style={{
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: 11,
+            textTransform: "uppercase",
+            letterSpacing: "0.15em",
+            color: "#555555",
+          }}
+        >
+          GERANDO SEU PLANO
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="grind-main-grid" style={{ display: "grid", gridTemplateColumns: "65fr 35fr", gap: 24 }}>
+    <div className="grind-main-grid grind-content-fade-in" style={{ display: "grid", gridTemplateColumns: "65fr 35fr", gap: 24 }}>
       {/* LEFT */}
       <div style={{ display: "grid", gap: 32, alignContent: "start" }}>
         <section>
