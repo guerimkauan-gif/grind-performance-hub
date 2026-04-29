@@ -163,16 +163,15 @@ export const getOrGenerateDailyPlan = createServerFn({ method: "POST" })
     }
     parsed.adherence_score = adherence;
 
-    // Override projection for users with little/no history
-    const historyCount = history?.length ?? 0;
-    if (historyCount === 0) {
-      parsed.projection =
-        "Primeiro dia registrado. Complete seu plano hoje para começar a construir seu histórico.";
-    } else if (historyCount < 3) {
-      // Strip negative tone — keep only if it sounds neutral/positive
-      if (!parsed.projection || /perd|atras|fora do|negativ|abaixo/i.test(String(parsed.projection))) {
-        parsed.projection = `Construindo consistência. ${historyCount} dia(s) registrado(s) — continue para ver projeções reais.`;
-      }
+    // Ensure observations is an array of 3 items (defensive)
+    if (!Array.isArray(parsed.observations)) {
+      parsed.observations = [];
+    }
+    if (typeof parsed.recommendation !== "string") {
+      parsed.recommendation = "";
+    }
+    if (typeof parsed.context !== "string") {
+      parsed.context = "";
     }
 
     const { error: upsertError } = await supabase.from("daily_logs").upsert(
