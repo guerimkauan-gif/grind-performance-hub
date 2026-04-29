@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { GrindLogo } from "@/components/GrindLogo";
 import { AuthLoader } from "@/components/AuthLoader";
+import { DailyChecklist } from "@/components/DailyChecklist";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
