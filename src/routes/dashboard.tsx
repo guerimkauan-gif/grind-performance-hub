@@ -388,10 +388,24 @@ function SectionHoje() {
         <section>
           <SectionLabel>SCORE DO OBJETIVO</SectionLabel>
           <div style={SEP} />
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 12 }}>
-            <ScoreRing value={Math.max(0, Math.min(100, Math.round(plan?.adherence_score ?? 75)))} />
-            <div style={{ ...LABEL, color: "#555555" }}>ADERÊNCIA AO PLANO</div>
-          </div>
+          {(() => {
+            const _today = new Date(); _today.setHours(0, 0, 0, 0);
+            const _start = profile?.created_at ? new Date(profile.created_at) : null;
+            const _deadline = profile?.deadline ? new Date(profile.deadline) : null;
+            const _total = _start && _deadline ? Math.max(1, Math.ceil((_deadline.getTime() - _start.getTime()) / 86400000)) : 0;
+            const _elapsed = _start ? Math.max(1, Math.min(_total || 9999, Math.floor((_today.getTime() - _start.getTime()) / 86400000) + 1)) : 0;
+            return (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 14 }}>
+                <ScoreRing value={Math.max(0, Math.min(100, Math.round(plan?.adherence_score ?? 75)))} />
+                {_total > 0 && (
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#A0A0A0", textTransform: "uppercase", letterSpacing: "0.12em" }}>
+                    DIA {_elapsed} DE {_total}
+                  </div>
+                )}
+                <div style={{ ...LABEL, color: "#555555" }}>ADERÊNCIA AO PLANO</div>
+              </div>
+            );
+          })()}
         </section>
 
         <section>
