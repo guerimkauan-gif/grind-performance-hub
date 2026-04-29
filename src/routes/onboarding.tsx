@@ -272,7 +272,7 @@ function OnboardingPage() {
             <div style={{ background: "#111111", border: "1px solid #2A2A2A", padding: "20px 24px", marginBottom: 32 }}>
               <SummaryRow label="HORAS / DIA" value={hours || "—"} />
               <SummaryRow label="DIAS / SEMANA" value={days || "—"} />
-              <SummaryRow label="DATA LIMITE" value={deadline || "—"} />
+              <SummaryRow label="DATA LIMITE" value={formatDeadline(deadline)} />
             </div>
 
             {error && <div style={{ color: "#E8003D", fontSize: 13, marginBottom: 16 }}>{error}</div>}
