@@ -313,15 +313,15 @@ function SectionHoje() {
           try {
             setPlan(JSON.parse(result.plan));
           } catch {
-            setPlanError("Erro ao parsear plano: " + result.plan);
+            setPlanError("Não foi possível gerar seu plano hoje. Tente novamente mais tarde.");
           }
         } else {
           console.error("Daily plan error:", result.error);
-          setPlanError(result.error ?? "Erro desconhecido");
+          setPlanError("Não foi possível gerar seu plano hoje. Tente novamente mais tarde.");
         }
-      } catch (err: any) {
+      } catch (err) {
         console.error("Daily plan request failed", err);
-        if (!cancelled) setPlanError("Request falhou: " + (err?.message ?? String(err)));
+        if (!cancelled) setPlanError("Não foi possível gerar seu plano hoje. Tente novamente mais tarde.");
       } finally {
         if (!cancelled) setPlanLoading(false);
       }
