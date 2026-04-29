@@ -1454,16 +1454,6 @@ function SectionCheckin() {
           </div>
         </CheckinCard>
 
-        {/* Q5: Sleep */}
-        <CheckinCard label="QUALIDADE DO SONO DE ONTEM" value={SLEEP_LABELS[data.sleep - 1]}>
-          <input
-            type="range" min={1} max={5} step={1}
-            value={data.sleep}
-            onChange={(e) => onChange("sleep", parseInt(e.target.value, 10))}
-            className="grind-range"
-          />
-          <ScaleLabels labels={SLEEP_LABELS} active={data.sleep - 1} />
-        </CheckinCard>
       </div>
 
       {/* Submit */}
