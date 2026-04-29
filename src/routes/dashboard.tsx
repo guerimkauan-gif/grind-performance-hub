@@ -1527,13 +1527,17 @@ function ScaleLabels({ labels, active }: { labels: string[]; active: number }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12, gap: 4 }}>
       {labels.map((l, i) => (
-        <div key={l} style={{
-          flex: 1, textAlign: "center",
-          fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
-          textTransform: "uppercase", letterSpacing: "0.08em",
-          color: i === active ? "#FFFFFF" : "#555555",
-          transition: "color 0.15s",
-        }}>
+        <div
+          key={l}
+          className="text-[9px] md:text-[12px]"
+          style={{
+            flex: 1, textAlign: "center",
+            fontFamily: "'JetBrains Mono', monospace",
+            textTransform: "uppercase", letterSpacing: "0.08em",
+            color: i === active ? "#FFFFFF" : "#A0A0A0",
+            transition: "color 0.15s",
+          }}
+        >
           {l}
         </div>
       ))}
