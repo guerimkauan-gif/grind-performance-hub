@@ -343,7 +343,7 @@ function SectionHoje() {
           <SectionLabel>SCORE DO OBJETIVO</SectionLabel>
           <div style={SEP} />
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 12 }}>
-            <ScoreRing value={plan?.adherence_score ?? 0} />
+            <ScoreRing value={Math.max(0, Math.min(100, Math.round(plan?.adherence_score ?? 75)))} />
             <div style={{ ...LABEL, color: "#555555" }}>ADERÊNCIA AO PLANO</div>
           </div>
           <p style={{ fontSize: 13, color: "#A0A0A0", marginTop: 16, lineHeight: 1.6, fontFamily: "'JetBrains Mono', monospace" }}>
