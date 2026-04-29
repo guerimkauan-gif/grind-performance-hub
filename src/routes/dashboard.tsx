@@ -295,6 +295,7 @@ function DashboardPage() {
         {section === "CORPO" && <SectionCorpo />}
         {section === "PROGRESSO" && <SectionProgresso />}
         {section === "CALENDÁRIO" && <SectionCalendario />}
+        {section === "TAREFAS" && <SectionTarefas />}
         {section === "OBJETIVO" && <SectionObjetivo profile={profile} userId={session?.user.id} onSaved={(p) => setProfile((cur) => cur ? { ...cur, ...p } : cur)} />}
       </main>
     </div>
