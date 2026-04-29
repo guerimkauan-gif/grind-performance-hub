@@ -10,8 +10,8 @@ export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
 });
 
-type SectionKey = "HOJE" | "CORPO" | "PROGRESSO" | "CALENDÁRIO" | "TAREFAS" | "OBJETIVO";
-const SECTIONS: SectionKey[] = ["HOJE", "CORPO", "PROGRESSO", "CALENDÁRIO", "TAREFAS", "OBJETIVO"];
+type SectionKey = "HOJE" | "CORPO" | "PROGRESSO" | "CALENDÁRIO" | "TAREFAS" | "CHECK-IN" | "OBJETIVO";
+const SECTIONS: SectionKey[] = ["HOJE", "CORPO", "PROGRESSO", "CALENDÁRIO", "TAREFAS", "CHECK-IN", "OBJETIVO"];
 
 const LABEL: React.CSSProperties = {
   fontSize: 11,
