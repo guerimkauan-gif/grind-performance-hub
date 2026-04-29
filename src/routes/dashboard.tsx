@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { GrindLogo } from "@/components/GrindLogo";
+import { AuthLoader } from "@/components/AuthLoader";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
@@ -215,6 +216,8 @@ function DashboardPage() {
   };
 
   const goSection = (s: SectionKey) => { setSection(s); setDrawerOpen(false); };
+
+  if (loading || !session || !profile) return <AuthLoader />;
 
   return (
     <div style={{ background: "#0A0A0A", minHeight: "100vh", color: "#FFFFFF" }}>

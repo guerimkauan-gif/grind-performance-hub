@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { GrindLogo } from "@/components/GrindLogo";
+import { AuthLoader } from "@/components/AuthLoader";
 
 export const Route = createFileRoute("/onboarding")({
   component: OnboardingPage,
@@ -107,6 +108,8 @@ function OnboardingPage() {
     if (error) return setError(error.message);
     navigate({ to: "/dashboard" });
   };
+
+  if (loading || !session) return <AuthLoader />;
 
   return (
     <div style={{ background: "#0A0A0A", minHeight: "100vh" }}>
