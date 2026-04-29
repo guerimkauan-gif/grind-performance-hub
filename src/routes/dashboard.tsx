@@ -1253,3 +1253,290 @@ function SectionCalendario() {
     </div>
   );
 }
+
+/* ====================== CHECK-IN NOTURNO ====================== */
+type CheckinData = {
+  focus_hours: number;
+  concentration: number;
+  physical: number;
+  energy: "CAIU" | "ESTÁVEL" | "AUMENTOU" | null;
+  sleep: number;
+};
+
+const CONCENTRATION_LABELS = ["PÉSSIMA", "RUIM", "OK", "BOA", "EXCELENTE"];
+const PHYSICAL_LABELS = ["PÉSSIMO", "RUIM", "OK", "BOM", "EXCELENTE"];
+const SLEEP_LABELS = ["PÉSSIMO", "RUIM", "OK", "BOM", "EXCELENTE"];
+
+const SLIDER_CSS = `
+.grind-range {
+  -webkit-appearance: none; appearance: none; width: 100%; height: 2px;
+  background: #2A2A2A; outline: none; cursor: pointer; border-radius: 0;
+}
+.grind-range::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 16px; height: 16px; background: #E8003D;
+  border: none; border-radius: 0; cursor: pointer;
+}
+.grind-range::-moz-range-thumb {
+  width: 16px; height: 16px; background: #E8003D;
+  border: none; border-radius: 0; cursor: pointer;
+}
+.grind-energy-btn {
+  flex: 1; height: 48px; background: #1A1A1A; border: 1px solid #2A2A2A;
+  color: #A0A0A0; font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em;
+  cursor: pointer; transition: all 0.15s;
+}
+.grind-energy-btn:hover { border-color: #555555; color: #FFFFFF; }
+.grind-energy-btn.active { background: #E8003D; border-color: #E8003D; color: #FFFFFF; }
+`;
+
+function todayLocalISO() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function SectionCheckin() {
+  const [data, setData] = useState<CheckinData>({
+    focus_hours: 4,
+    concentration: 3,
+    physical: 3,
+    energy: null,
+    sleep: 3,
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: sess } = await supabase.auth.getSession();
+      const uid = sess.session?.user.id;
+      if (!uid) { setLoading(false); return; }
+      const { data: row } = await supabase
+        .from("daily_logs")
+        .select("checkin_data")
+        .eq("user_id", uid)
+        .eq("log_date", todayLocalISO())
+        .maybeSingle();
+      if (cancelled) return;
+      if (row?.checkin_data) {
+        const c = row.checkin_data as Partial<CheckinData>;
+        setData({
+          focus_hours: c.focus_hours ?? 4,
+          concentration: c.concentration ?? 3,
+          physical: c.physical ?? 3,
+          energy: c.energy ?? null,
+          sleep: c.sleep ?? 3,
+        });
+        setSaved(true);
+      }
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const submit = async () => {
+    setSaving(true); setError(null);
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const uid = sess.session?.user.id;
+      if (!uid) throw new Error("not authenticated");
+      const log_date = todayLocalISO();
+      const { data: existing } = await supabase
+        .from("daily_logs")
+        .select("id")
+        .eq("user_id", uid)
+        .eq("log_date", log_date)
+        .maybeSingle();
+      if (existing) {
+        const { error: e } = await supabase
+          .from("daily_logs")
+          .update({ checkin_data: data as unknown as never })
+          .eq("id", existing.id);
+        if (e) throw e;
+      } else {
+        const { error: e } = await supabase
+          .from("daily_logs")
+          .insert({ user_id: uid, log_date, checkin_data: data as unknown as never });
+        if (e) throw e;
+      }
+      setSaved(true);
+    } catch (err) {
+      console.error(err);
+      setError("Não foi possível salvar. Tente novamente.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const onChange = <K extends keyof CheckinData>(k: K, v: CheckinData[K]) => {
+    setData((d) => ({ ...d, [k]: v }));
+    setSaved(false);
+  };
+
+  if (loading) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", padding: 64 }}>
+        <div style={{ display: "flex", gap: 8 }}>
+          <span className="grind-loader-dot" /><span className="grind-loader-dot" /><span className="grind-loader-dot" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grind-content-fade-in" style={{ maxWidth: 720, margin: "0 auto" }}>
+      <style>{SLIDER_CSS}</style>
+
+      {/* Header */}
+      <div style={{ marginBottom: 32 }}>
+        <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 32, letterSpacing: "-0.02em", color: "#FFFFFF", margin: 0 }}>
+          CHECK-IN NOTURNO
+        </h1>
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#A0A0A0", textTransform: "uppercase", letterSpacing: "0.15em", marginTop: 8 }}>
+          {formatToday()}
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gap: 2 }}>
+        {/* Q1: Focus hours */}
+        <CheckinCard label="HORAS FOCADAS HOJE" value={`${data.focus_hours.toFixed(1).replace(/\.0$/, "")}h`}>
+          <input
+            type="range" min={0} max={12} step={0.5}
+            value={data.focus_hours}
+            onChange={(e) => onChange("focus_hours", parseFloat(e.target.value))}
+            className="grind-range"
+          />
+          <RangeTicks left="0h" right="12h" />
+        </CheckinCard>
+
+        {/* Q2: Concentration */}
+        <CheckinCard label="CONCENTRAÇÃO" value={CONCENTRATION_LABELS[data.concentration - 1]}>
+          <input
+            type="range" min={1} max={5} step={1}
+            value={data.concentration}
+            onChange={(e) => onChange("concentration", parseInt(e.target.value, 10))}
+            className="grind-range"
+          />
+          <ScaleLabels labels={CONCENTRATION_LABELS} active={data.concentration - 1} />
+        </CheckinCard>
+
+        {/* Q3: Physical */}
+        <CheckinCard label="ESTADO FÍSICO" value={PHYSICAL_LABELS[data.physical - 1]}>
+          <input
+            type="range" min={1} max={5} step={1}
+            value={data.physical}
+            onChange={(e) => onChange("physical", parseInt(e.target.value, 10))}
+            className="grind-range"
+          />
+          <ScaleLabels labels={PHYSICAL_LABELS} active={data.physical - 1} />
+        </CheckinCard>
+
+        {/* Q4: Energy */}
+        <CheckinCard label="NÍVEL DE ENERGIA AO LONGO DO DIA" value={data.energy ?? "—"}>
+          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+            {(["CAIU", "ESTÁVEL", "AUMENTOU"] as const).map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                className={`grind-energy-btn ${data.energy === opt ? "active" : ""}`}
+                onClick={() => onChange("energy", opt)}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+        </CheckinCard>
+
+        {/* Q5: Sleep */}
+        <CheckinCard label="QUALIDADE DO SONO DE ONTEM" value={SLEEP_LABELS[data.sleep - 1]}>
+          <input
+            type="range" min={1} max={5} step={1}
+            value={data.sleep}
+            onChange={(e) => onChange("sleep", parseInt(e.target.value, 10))}
+            className="grind-range"
+          />
+          <ScaleLabels labels={SLEEP_LABELS} active={data.sleep - 1} />
+        </CheckinCard>
+      </div>
+
+      {/* Submit */}
+      <div style={{ marginTop: 32 }}>
+        <button
+          onClick={submit}
+          disabled={saving}
+          style={{
+            width: "100%", height: 56, background: "#E8003D", border: "none",
+            color: "#FFFFFF", fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700,
+            fontSize: 13, textTransform: "uppercase", letterSpacing: "0.15em",
+            cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.5 : 1,
+            transition: "opacity 0.15s",
+          }}
+        >
+          {saving ? "SALVANDO..." : "REGISTRAR DIA"}
+        </button>
+        {saved && !saving && (
+          <div style={{ marginTop: 16, padding: 16, background: "#111111", border: "1px solid #2A2A2A", display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 8, height: 8, background: "#E8003D" }} />
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "#FFFFFF", textTransform: "uppercase", letterSpacing: "0.12em" }}>
+              CHECK-IN REGISTRADO
+            </div>
+          </div>
+        )}
+        {error && (
+          <div style={{ marginTop: 16, fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "#E8003D", textTransform: "uppercase", letterSpacing: "0.12em" }}>
+            {error}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CheckinCard({ label, value, children }: { label: string; value: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div style={{ background: "#111111", border: "1px solid #2A2A2A", padding: 24 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 20 }}>
+        <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color: "#A0A0A0" }}>
+          {label}
+        </div>
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, color: "#E8003D", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+          {value}
+        </div>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function RangeTicks({ left, right }: { left: string; right: string }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#555555", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+      <span>{left}</span><span>{right}</span>
+    </div>
+  );
+}
+
+function ScaleLabels({ labels, active }: { labels: string[]; active: number }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12, gap: 4 }}>
+      {labels.map((l, i) => (
+        <div key={l} style={{
+          flex: 1, textAlign: "center",
+          fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+          textTransform: "uppercase", letterSpacing: "0.08em",
+          color: i === active ? "#FFFFFF" : "#555555",
+          transition: "color 0.15s",
+        }}>
+          {l}
+        </div>
+      ))}
+    </div>
+  );
+}
