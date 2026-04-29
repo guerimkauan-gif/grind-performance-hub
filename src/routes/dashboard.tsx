@@ -339,11 +339,7 @@ function SectionHoje() {
     return () => { cancelled = true; };
   }, []);
 
-  const toggleTask = (i: number) => {
-    setTasks((prev) => prev.map((x, idx) => idx === i ? { ...x, done: !x.done } : x));
-    setPopKey((p) => ({ ...p, [i]: (p[i] || 0) + 1 }));
-  };
-  const completed = tasks.filter((t) => t.done).length;
+
 
   if (planLoading) {
     return (
