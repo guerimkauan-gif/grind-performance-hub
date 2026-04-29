@@ -272,7 +272,7 @@ function OnboardingPage() {
             <div style={{ background: "#111111", border: "1px solid #2A2A2A", padding: "20px 24px", marginBottom: 32 }}>
               <SummaryRow label="HORAS / DIA" value={hours || "—"} />
               <SummaryRow label="DIAS / SEMANA" value={days || "—"} />
-              <SummaryRow label="DATA LIMITE" value={deadline || "—"} />
+              <SummaryRow label="DATA LIMITE" value={formatDeadline(deadline)} />
             </div>
 
             {error && <div style={{ color: "#E8003D", fontSize: 13, marginBottom: 16 }}>{error}</div>}
@@ -284,6 +284,14 @@ function OnboardingPage() {
       </main>
     </div>
   );
+}
+
+function formatDeadline(d?: string | null) {
+  if (!d) return "—";
+  const months = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
+  const [y, m, day] = d.split("-").map(Number);
+  if (!y || !m || !day) return "—";
+  return `${String(day).padStart(2, "0")} ${months[m - 1]} ${y}`;
 }
 
 function SummaryRow({ label, value }: { label: string; value: string }) {
