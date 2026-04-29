@@ -39,6 +39,13 @@ function buildUserPrompt(profile: any, history: any[]): string {
     ? Math.round(history.reduce((a, h) => a + (h.adherence_score ?? 0), 0) / history.length)
     : 0;
 
+  const projectionRule =
+    history.length === 0
+      ? `- Como é o PRIMEIRO DIA do usuário (sem histórico), use exatamente este texto em "projection": "Primeiro dia registrado. Complete seu plano hoje para começar a construir seu histórico."`
+      : history.length < 3
+        ? `- O usuário tem apenas ${history.length} dia(s) de histórico. Use uma "projection" NEUTRA e encorajadora sobre construir consistência. NÃO faça projeções negativas sobre prazo ou semanas perdidas.`
+        : `- Use "projection" baseada no ritmo real vs prazo. Pode ser positiva ou negativa conforme os dados.`;
+
   return `USUÁRIO: ${profile.goal_name ?? "—"}
 OBJETIVO: ${profile.dream ?? "—"}
 PLANO: ${profile.daily_hours ?? 0}h por dia, ${profile.days_per_week ?? 0} dias por semana
@@ -54,6 +61,7 @@ DADOS DO CORPO HOJE:
 HISTÓRICO RECENTE (últimos 7 dias):
 - Dias cumpridos: ${completed}
 - Score médio: ${avg}
+- Total de registros: ${history.length}
 
 REGRAS DE INTERPRETAÇÃO:
 - Recovery <33%: recomendar apenas revisão leve, sem conteúdo novo, dormir cedo
@@ -69,6 +77,14 @@ REGRAS DE INTERPRETAÇÃO:
 - Strain 8-14: equilíbrio saudável
 - Strain <8: pode aumentar carga
 
+REGRA DE PROJEÇÃO:
+${projectionRule}
+
+REGRA DE ADHERENCE_SCORE:
+- adherence_score deve ser um número INTEIRO de 0 a 100
+- Para usuário SEM histórico: use 75 como ponto de partida neutro
+- Com histórico: calcule baseado no score médio e tendência
+
 Gere o plano do dia no seguinte formato JSON exato:
 {
   "context": "frase de 1-2 linhas sobre o estado do corpo hoje, tom direto",
@@ -78,7 +94,7 @@ Gere o plano do dia no seguinte formato JSON exato:
     {"number": "03", "task": "descrição da prioridade", "category": "CATEGORIA"}
   ],
   "projection": "frase curta sobre o ritmo atual vs prazo",
-  "adherence_score": número de 0 a 100 representando aderência ao plano
+  "adherence_score": número inteiro de 0 a 100
 }
 
 Responda APENAS com o JSON. Sem texto adicional.`;
@@ -176,7 +192,25 @@ export const getOrGenerateDailyPlan = createServerFn({ method: "POST" })
       return { ok: false, error: "Invalid AI response" };
     }
 
-    const adherence = typeof parsed.adherence_score === "number" ? parsed.adherence_score : 0;
+    // Adherence: clamp to 0-100 integer; default 75 if missing/invalid
+    let adherence = 75;
+    const rawAdh = parsed.adherence_score;
+    if (typeof rawAdh === "number" && Number.isFinite(rawAdh)) {
+      adherence = Math.max(0, Math.min(100, Math.round(rawAdh)));
+    }
+    parsed.adherence_score = adherence;
+
+    // Override projection for users with little/no history
+    const historyCount = history?.length ?? 0;
+    if (historyCount === 0) {
+      parsed.projection =
+        "Primeiro dia registrado. Complete seu plano hoje para começar a construir seu histórico.";
+    } else if (historyCount < 3) {
+      // Strip negative tone — keep only if it sounds neutral/positive
+      if (!parsed.projection || /perd|atras|fora do|negativ|abaixo/i.test(String(parsed.projection))) {
+        parsed.projection = `Construindo consistência. ${historyCount} dia(s) registrado(s) — continue para ver projeções reais.`;
+      }
+    }
 
     const { error: upsertError } = await supabase.from("daily_logs").upsert(
       {
