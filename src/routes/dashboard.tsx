@@ -440,26 +440,7 @@ function SectionHoje() {
         <section>
           <SectionLabel>TAREFAS DO DIA</SectionLabel>
           <div style={SEP} />
-          <div style={{ display: "grid", gap: 12 }}>
-            {tasks.map((t, i) => (
-              <label key={i} style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
-                <span
-                  key={`box-${i}-${popKey[i] || 0}`}
-                  onClick={() => toggleTask(i)}
-                  className={popKey[i] ? "grind-check-pop" : ""}
-                  style={{ width: 18, height: 18, border: "1px solid #2A2A2A", background: t.done ? "#E8003D" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", color: "#FFFFFF", fontSize: 12, flexShrink: 0 }}
-                >
-                  {t.done ? "✓" : ""}
-                </span>
-                <span className={`grind-strike-wrap ${t.done ? "on" : ""}`} style={{ fontSize: 14, color: t.done ? "#555555" : "#FFFFFF" }}>
-                  {t.label}
-                </span>
-              </label>
-            ))}
-          </div>
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "#A0A0A0", marginTop: 16, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-            {completed} DE {tasks.length} CONCLUÍDAS
-          </div>
+          <DailyChecklist />
         </section>
       </div>
 
