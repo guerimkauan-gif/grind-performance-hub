@@ -191,8 +191,13 @@ const IconChecklist = () => (
     <polyline points="3 7 5 9 9 5" /><polyline points="3 15 5 17 9 13" /><line x1="13" y1="7" x2="21" y2="7" /><line x1="13" y1="15" x2="21" y2="15" />
   </svg>
 );
+const IconMoon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555555" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
+    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
+  </svg>
+);
 const ICONS: Record<SectionKey, () => React.ReactElement> = {
-  HOJE: IconSun, CORPO: IconPulse, PROGRESSO: IconBars, "CALENDÁRIO": IconCalendar, TAREFAS: IconChecklist, OBJETIVO: IconTarget,
+  HOJE: IconSun, CORPO: IconPulse, PROGRESSO: IconBars, "CALENDÁRIO": IconCalendar, TAREFAS: IconChecklist, "CHECK-IN": IconMoon, OBJETIVO: IconTarget,
 };
 
 type Profile = {
