@@ -347,7 +347,7 @@ function SectionHoje() {
             <div style={{ ...LABEL, color: "#555555" }}>ADERÊNCIA AO PLANO</div>
           </div>
           <p style={{ fontSize: 13, color: "#A0A0A0", marginTop: 16, lineHeight: 1.6, fontFamily: "'JetBrains Mono', monospace" }}>
-            {plan?.projection ?? (planLoading ? "Calculando projeção..." : "—")}
+            {planLoading ? "Calculando score..." : `Score baseado em sono, recovery e strain: ${Math.round(plan?.adherence_score ?? 75)}/100`}
           </p>
         </section>
 
