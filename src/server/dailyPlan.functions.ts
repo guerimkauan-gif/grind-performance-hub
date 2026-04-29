@@ -22,79 +22,42 @@ function daysUntil(d: string | null): number {
   return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
 }
 
-function buildUserPrompt(profile: any, history: any[]): string {
-  const r = PLACEHOLDER.recovery_score;
-  const recoveryNote = r < 33 ? "crítico" : r <= 66 ? "moderado" : "ótimo";
-  const sleepNote =
-    PLACEHOLDER.sleep_hours < 6 ? "crítico" :
-    PLACEHOLDER.sleep_hours < 7 ? "insuficiente" :
-    PLACEHOLDER.sleep_hours <= 8 ? "adequado" : "ótimo";
-  const strainNote =
-    PLACEHOLDER.strain > 15 ? "recuperação" :
-    PLACEHOLDER.strain >= 8 ? "equilíbrio" : "descansado";
-  const hrvNote = PLACEHOLDER.hrv >= 55 ? "alto=foco profundo" : "baixo=tarefas mecânicas";
-
-  const completed = history.filter((h) => (h.adherence_score ?? 0) > 0).length;
-  const avg = history.length
-    ? Math.round(history.reduce((a, h) => a + (h.adherence_score ?? 0), 0) / history.length)
-    : 0;
-
-  const projectionRule =
-    history.length === 0
-      ? `- Como é o PRIMEIRO DIA do usuário (sem histórico), use exatamente este texto em "projection": "Primeiro dia registrado. Complete seu plano hoje para começar a construir seu histórico."`
-      : history.length < 3
-        ? `- O usuário tem apenas ${history.length} dia(s) de histórico. Use uma "projection" NEUTRA e encorajadora sobre construir consistência. NÃO faça projeções negativas sobre prazo ou semanas perdidas.`
-        : `- Use "projection" baseada no ritmo real vs prazo. Pode ser positiva ou negativa conforme os dados.`;
-
-  return `USUÁRIO: ${profile.goal_name ?? "—"}
-OBJETIVO: ${profile.dream ?? "—"}
-PLANO: ${profile.daily_hours ?? 0}h por dia, ${profile.days_per_week ?? 0} dias por semana
-PRAZO: ${formatDeadline(profile.deadline)}
-DIAS RESTANTES: ${daysUntil(profile.deadline)}
-
-DADOS DO CORPO HOJE:
-- Recovery: ${PLACEHOLDER.recovery_score}% — ${recoveryNote}
-- HRV: ${PLACEHOLDER.hrv}ms — ${hrvNote}
-- Sono: ${PLACEHOLDER.sleep_hours}h — ${sleepNote}
-- Strain ontem: ${PLACEHOLDER.strain} — ${strainNote}
-
-HISTÓRICO RECENTE (últimos 7 dias):
-- Dias cumpridos: ${completed}
-- Score médio: ${avg}
-- Total de registros: ${history.length}
+function buildUserPrompt(_profile: any, _history: any[]): string {
+  return `DADOS DO CORPO HOJE:
+- Recovery: ${PLACEHOLDER.recovery_score}%
+- HRV: ${PLACEHOLDER.hrv}ms
+- Sono: ${PLACEHOLDER.sleep_hours}h
+- Strain ontem: ${PLACEHOLDER.strain}
 
 REGRAS DE INTERPRETAÇÃO:
-- Recovery <33%: recomendar apenas revisão leve, sem conteúdo novo, dormir cedo
-- Recovery 34-66%: ritmo normal, pausas a cada 90min, prioridades importantes mas não as mais difíceis
-- Recovery 67-100%: sinal verde para máximo esforço cognitivo, conteúdo difícil, sessões longas
-- HRV alto: sessões longas de foco, aprendizado novo, criatividade
-- HRV baixo: tarefas mecânicas, revisão, organização
-- Sono <6h: reduzir carga 40%, alerta crítico
-- Sono 6-7h: cafeína estratégica manhã, evitar estudo após 21h
-- Sono 7-8h: ritmo normal
-- Sono >8h com qualidade: dia de alta performance
-- Strain >15: corpo em recuperação, reduzir carga
-- Strain 8-14: equilíbrio saudável
-- Strain <8: pode aumentar carga
 
-REGRA DE PROJEÇÃO:
-${projectionRule}
+Recovery 0-33%: sistema nervoso sobrecarregado, dificuldade severa de foco, risco de burnout se forçar
+Recovery 34-66%: capacidade reduzida, foco possível mas limitado, pausas frequentes necessárias
+Recovery 67-100%: corpo bem recuperado, janela favorável para trabalho cognitivo intenso
 
-REGRA DE ADHERENCE_SCORE:
-- adherence_score deve ser um número INTEIRO de 0 a 100
-- Para usuário SEM histórico: use 75 como ponto de partida neutro
-- Com histórico: calcule baseado no score médio e tendência
+HRV alto (acima da média pessoal): mente apta para criatividade, aprendizado novo, decisões complexas
+HRV baixo (abaixo da média pessoal): prefira tarefas mecânicas, revisão, organização — evite criar ou decidir
 
-Gere o plano do dia no seguinte formato JSON exato:
+Sono menos de 6h: déficit severo, cafeína estratégica pela manhã, evitar trabalho importante após 15h
+Sono 6-7h: sono insuficiente, rendimento reduzido em 20-30%, cafeína com moderação
+Sono 7-8h: sono adequado, ritmo normal
+Sono acima de 8h com qualidade: condição de alta performance
+
+Strain acima de 15: corpo ainda se recuperando do esforço físico anterior
+Strain 8-14: equilíbrio saudável
+Strain abaixo de 8: corpo descansado fisicamente
+
+Gere a resposta no seguinte formato JSON exato:
+
 {
-  "context": "frase de 1-2 linhas sobre o estado do corpo hoje, tom direto",
-  "priorities": [
-    {"number": "01", "task": "descrição da prioridade", "category": "CATEGORIA"},
-    {"number": "02", "task": "descrição da prioridade", "category": "CATEGORIA"},
-    {"number": "03", "task": "descrição da prioridade", "category": "CATEGORIA"}
+  "context": "Uma frase direta sobre o estado geral do corpo hoje. Máximo 2 linhas. Sem drama, sem motivação forçada.",
+  "observations": [
+    {"number": "01", "metric": "RECOVERY", "insight": "o que esse número significa para o dia — consequências práticas, não tarefas"},
+    {"number": "02", "metric": "SONO", "insight": "o que esse número significa — inclua dica prática se relevante (ex: cafeína, horário de pausa)"},
+    {"number": "03", "metric": "HRV", "insight": "o que esse número significa para capacidade cognitiva hoje"}
   ],
-  "projection": "frase curta sobre o ritmo atual vs prazo",
-  "adherence_score": número inteiro de 0 a 100
+  "recommendation": "Uma frase curta e prática. O que faz sentido priorizar ou evitar hoje dado o estado do corpo. Sem mencionar tarefas específicas.",
+  "adherence_score": número de 0 a 100 baseado apenas em: sono adequado (+34), recovery acima de 66% (+33), strain equilibrado (+33)
 }
 
 Responda APENAS com o JSON. Sem texto adicional.`;
@@ -165,7 +128,7 @@ export const getOrGenerateDailyPlan = createServerFn({ method: "POST" })
           model: "claude-sonnet-4-5",
           max_tokens: 800,
           system:
-            "Você é o sistema de IA do GRIND — um app de performance pessoal que conecta dados biométricos ao objetivo de vida do usuário. Seu tom é direto, motivador e honesto. Nunca enrola. Fala como um coach de elite que respeita o tempo do usuário.",
+            "Você é o sistema de IA do GRIND — um app de performance pessoal que conecta dados biométricos ao objetivo de vida do usuário. Seu tom é direto, informativo e sem exageros. Você não prescreve tarefas — você informa o usuário sobre o estado do próprio corpo e o que isso significa para o dia.",
           messages: [{ role: "user", content: buildUserPrompt(profile, history ?? []) }],
         }),
       });
@@ -200,16 +163,15 @@ export const getOrGenerateDailyPlan = createServerFn({ method: "POST" })
     }
     parsed.adherence_score = adherence;
 
-    // Override projection for users with little/no history
-    const historyCount = history?.length ?? 0;
-    if (historyCount === 0) {
-      parsed.projection =
-        "Primeiro dia registrado. Complete seu plano hoje para começar a construir seu histórico.";
-    } else if (historyCount < 3) {
-      // Strip negative tone — keep only if it sounds neutral/positive
-      if (!parsed.projection || /perd|atras|fora do|negativ|abaixo/i.test(String(parsed.projection))) {
-        parsed.projection = `Construindo consistência. ${historyCount} dia(s) registrado(s) — continue para ver projeções reais.`;
-      }
+    // Ensure observations is an array of 3 items (defensive)
+    if (!Array.isArray(parsed.observations)) {
+      parsed.observations = [];
+    }
+    if (typeof parsed.recommendation !== "string") {
+      parsed.recommendation = "";
+    }
+    if (typeof parsed.context !== "string") {
+      parsed.context = "";
     }
 
     const { error: upsertError } = await supabase.from("daily_logs").upsert(
