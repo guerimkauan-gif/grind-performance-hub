@@ -264,7 +264,7 @@ function OnboardingPage() {
             <p style={BODY}>Objetivo registrado. Revise seu compromisso abaixo.</p>
 
             <div style={{ textAlign: "center", marginBottom: 24 }}>
-              <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 80, color: "#E8003D", letterSpacing: "0.2em", lineHeight: 1 }}>
+              <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 80, color: "#FFFFFF", letterSpacing: "0.2em", lineHeight: 1 }}>
                 GRIND
               </div>
             </div>
