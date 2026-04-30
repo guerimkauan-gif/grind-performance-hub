@@ -1434,7 +1434,7 @@ function SectionCheckin() {
         </CheckinCard>
 
         {/* Q4: Energy */}
-        <CheckinCard label="NÍVEL DE ENERGIA AO LONGO DO DIA" value={data.energy ?? "—"}>
+        <CheckinCard label="NÍVEL DE ENERGIA AO LONGO DO DIA" value={null}>
           <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
             {(["CAIU", "ESTÁVEL", "AUMENTOU"] as const).map((opt) => (
               <button
@@ -1513,9 +1513,11 @@ function CheckinCard({ label, value, children }: { label: string; value: React.R
         <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color: "#A0A0A0", flex: 1, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {label}
         </div>
-        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, color: "#E8003D", textTransform: "uppercase", letterSpacing: "0.08em", flexShrink: 0, whiteSpace: "nowrap" }}>
-          {value}
-        </div>
+        {value !== null && (
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, color: "#E8003D", textTransform: "uppercase", letterSpacing: "0.08em", flexShrink: 0, whiteSpace: "nowrap" }}>
+            {value}
+          </div>
+        )}
       </div>
       {children}
     </div>
