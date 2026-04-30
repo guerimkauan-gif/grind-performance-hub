@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
-const PLACEHOLDER = { recovery_score: 75, hrv: 58, sleep_hours: 7.5, strain: 10.5, stress_score: 1.8 };
+const PLACEHOLDER = { recovery_score: 75, hrv: 58, sleep_hours: 7.5, strain: 10.5, stress_score: 1.8, steps: 4832 };
 
 function todayISO() {
   const d = new Date();
@@ -29,6 +29,7 @@ function buildUserPrompt(_profile: any, _history: any[]): string {
 - Sono: ${PLACEHOLDER.sleep_hours}h
 - Strain ontem: ${PLACEHOLDER.strain}
 - Stress: ${PLACEHOLDER.stress_score} (scale 0-3, where 0 = no stress, 3 = high stress)
+- Steps: ${PLACEHOLDER.steps} passos (meta diária: 10000)
 
 REGRAS DE INTERPRETAÇÃO:
 
@@ -53,7 +54,12 @@ Stress 1-2: moderado, monitore a energia, alterne foco com pausas curtas
 Stress 2-3: elevado, prefira tarefas cognitivas mais leves e inclua pausas ativas frequentes
 Stress acima de 3: alto, priorize recuperação, evite carga cognitiva pesada e faça pausas ativas
 
-Ao gerar a recommendation, considere o nível de stress: stress alto deve sugerir tarefas cognitivas mais leves e pausas ativas; stress baixo favorece blocos de foco profundo.
+Steps abaixo de 3000: sedentário, movimento melhora a cognição
+Steps 3000-6000: leve, dentro do mínimo recomendado
+Steps 6000-9000: ativo, bom suporte para performance cognitiva
+Steps acima de 9000: muito ativo, ótimo para recuperação
+
+Ao gerar a recommendation, considere o nível de stress e o número de passos: stress alto deve sugerir tarefas cognitivas mais leves e pausas ativas; stress baixo favorece blocos de foco profundo; poucos passos (abaixo de 6000) deve sugerir uma caminhada leve antes ou entre blocos de foco para melhorar a cognição.
 
 Gere a resposta no seguinte formato JSON exato:
 
