@@ -1408,33 +1408,27 @@ function SectionCheckin() {
       <div style={{ display: "grid", gap: 2 }}>
         {/* Q1: Focus hours */}
         <CheckinCard label="HORAS FOCADAS HOJE" value={`${data.focus_hours.toFixed(1).replace(/\.0$/, "")}h`}>
-          <input
-            type="range" min={0} max={12} step={0.5}
-            value={data.focus_hours}
-            onChange={(e) => onChange("focus_hours", parseFloat(e.target.value))}
-            className="grind-range"
+          <SliderWithSteppers
+            value={data.focus_hours} min={0} max={12} step={0.5}
+            onChange={(v) => onChange("focus_hours", v)}
           />
           <RangeTicks left="0h" right="12h" />
         </CheckinCard>
 
         {/* Q2: Concentration */}
         <CheckinCard label="CONCENTRAÇÃO" value={CONCENTRATION_LABELS[data.concentration - 1]}>
-          <input
-            type="range" min={1} max={5} step={1}
-            value={data.concentration}
-            onChange={(e) => onChange("concentration", parseInt(e.target.value, 10))}
-            className="grind-range"
+          <SliderWithSteppers
+            value={data.concentration} min={1} max={5} step={1}
+            onChange={(v) => onChange("concentration", v)}
           />
           <ScaleLabels labels={CONCENTRATION_LABELS} active={data.concentration - 1} />
         </CheckinCard>
 
         {/* Q3: Physical */}
         <CheckinCard label="ESTADO FÍSICO" value={PHYSICAL_LABELS[data.physical - 1]}>
-          <input
-            type="range" min={1} max={5} step={1}
-            value={data.physical}
-            onChange={(e) => onChange("physical", parseInt(e.target.value, 10))}
-            className="grind-range"
+          <SliderWithSteppers
+            value={data.physical} min={1} max={5} step={1}
+            onChange={(v) => onChange("physical", v)}
           />
           <ScaleLabels labels={PHYSICAL_LABELS} active={data.physical - 1} />
         </CheckinCard>
