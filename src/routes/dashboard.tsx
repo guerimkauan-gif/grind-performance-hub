@@ -1434,7 +1434,7 @@ function SectionCheckin() {
         </CheckinCard>
 
         {/* Q4: Energy */}
-        <CheckinCard label="NÍVEL DE ENERGIA AO LONGO DO DIA" value={data.energy ?? "—"}>
+        <CheckinCard label="NÍVEL DE ENERGIA AO LONGO DO DIA" value={null}>
           <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
             {(["CAIU", "ESTÁVEL", "AUMENTOU"] as const).map((opt) => (
               <button
