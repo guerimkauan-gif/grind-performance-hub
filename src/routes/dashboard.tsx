@@ -501,47 +501,12 @@ function SectionHoje() {
 
 /* ====================== CORPO ====================== */
 function SectionCorpo() {
-  const stressValue = 1.8;
-  const stressMax = 3;
-  const stressNote =
-    stressValue > 3
-      ? "Alto — priorize recuperação"
-      : stressValue >= 2
-      ? "Elevado — considere pausas ativas"
-      : stressValue >= 1
-      ? "Moderado — monitore sua energia"
-      : "Baixo — condições ideais para foco";
   const metrics = [
     { name: "RECOVERY", value: "87", unit: "%", pct: 87, note: "Excelente — dia de alta performance" },
     { name: "HRV", value: "62", unit: "ms", pct: 65, note: "Estável — foco profundo recomendado" },
     { name: "SONO", value: "7h 32min", unit: "", pct: 80, note: "Adequado — ritmo normal" },
     { name: "STRAIN", value: "11.4", unit: "", pct: 55, note: "Equilibrado — manter o ritmo" },
   ];
-  const stressMetric = {
-    name: "STRESS",
-    value: stressValue.toFixed(1),
-    unit: "",
-    pct: Math.min(100, (stressValue / stressMax) * 100),
-    note: stressNote,
-  };
-  const stepsValue = 4832;
-  const stepsMax = 10000;
-  const stepsNote =
-    stepsValue > 9000
-      ? "Muito ativo — ótimo para recuperação"
-      : stepsValue > 6000
-      ? "Ativo — bom para performance cognitiva"
-      : stepsValue > 3000
-      ? "Leve — dentro do mínimo recomendado"
-      : "Sedentário — movimento melhora cognição";
-  const stepsFormatted = stepsValue.toLocaleString("pt-BR");
-  const stepsMetric = {
-    name: "STEPS",
-    value: stepsFormatted,
-    unit: "passos",
-    pct: Math.min(100, (stepsValue / stepsMax) * 100),
-    note: stepsNote,
-  };
   return (
     <div style={{ maxWidth: 800, margin: "0 auto", display: "grid", gap: 40 }}>
       <section>
@@ -561,28 +526,6 @@ function SectionCorpo() {
               <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 400, fontSize: 12, color: "#555555" }}>{m.note}</div>
             </div>
           ))}
-          <div style={{ background: "#1A1A1A", border: "1px solid #2A2A2A", padding: 24, gridColumn: "1 / -1" }}>
-            <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: "#A0A0A0", marginBottom: 12 }}>{stressMetric.name}</div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 16 }}>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 36, color: "#FFFFFF" }}>{stressMetric.value}</span>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, color: "#555555" }}>/ {stressMax}</span>
-            </div>
-            <div style={{ height: 2, background: "#0A0A0A", marginBottom: 12 }}>
-              <div className="grind-bar-fill" style={{ height: "100%", background: "#E8003D", width: 0, ["--bar-target" as never]: `${stressMetric.pct}%` }} />
-            </div>
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 400, fontSize: 12, color: "#555555" }}>{stressMetric.note}</div>
-          </div>
-          <div style={{ background: "#1A1A1A", border: "1px solid #2A2A2A", padding: 24, gridColumn: "1 / -1" }}>
-            <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: "#A0A0A0", marginBottom: 12 }}>{stepsMetric.name}</div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 16 }}>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 36, color: "#FFFFFF" }}>{stepsMetric.value}</span>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, color: "#555555" }}>{stepsMetric.unit}</span>
-            </div>
-            <div style={{ height: 2, background: "#0A0A0A", marginBottom: 12 }}>
-              <div className="grind-bar-fill" style={{ height: "100%", background: "#E8003D", width: 0, ["--bar-target" as never]: `${stepsMetric.pct}%` }} />
-            </div>
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 400, fontSize: 12, color: "#555555" }}>{stepsMetric.note}</div>
-          </div>
         </div>
       </section>
 
