@@ -501,12 +501,29 @@ function SectionHoje() {
 
 /* ====================== CORPO ====================== */
 function SectionCorpo() {
+  const stressValue = 1.8;
+  const stressMax = 3;
+  const stressNote =
+    stressValue > 3
+      ? "Alto — priorize recuperação"
+      : stressValue >= 2
+      ? "Elevado — considere pausas ativas"
+      : stressValue >= 1
+      ? "Moderado — monitore sua energia"
+      : "Baixo — condições ideais para foco";
   const metrics = [
     { name: "RECOVERY", value: "87", unit: "%", pct: 87, note: "Excelente — dia de alta performance" },
     { name: "HRV", value: "62", unit: "ms", pct: 65, note: "Estável — foco profundo recomendado" },
     { name: "SONO", value: "7h 32min", unit: "", pct: 80, note: "Adequado — ritmo normal" },
     { name: "STRAIN", value: "11.4", unit: "", pct: 55, note: "Equilibrado — manter o ritmo" },
   ];
+  const stressMetric = {
+    name: "STRESS",
+    value: stressValue.toFixed(1),
+    unit: "",
+    pct: Math.min(100, (stressValue / stressMax) * 100),
+    note: stressNote,
+  };
   return (
     <div style={{ maxWidth: 800, margin: "0 auto", display: "grid", gap: 40 }}>
       <section>
