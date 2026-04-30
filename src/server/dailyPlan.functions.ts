@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
-const PLACEHOLDER = { recovery_score: 75, hrv: 58, sleep_hours: 7.5, strain: 10.5 };
+const PLACEHOLDER = { recovery_score: 75, hrv: 58, sleep_hours: 7.5, strain: 10.5, stress_score: 1.8 };
 
 function todayISO() {
   const d = new Date();
@@ -28,6 +28,7 @@ function buildUserPrompt(_profile: any, _history: any[]): string {
 - HRV: ${PLACEHOLDER.hrv}ms
 - Sono: ${PLACEHOLDER.sleep_hours}h
 - Strain ontem: ${PLACEHOLDER.strain}
+- Stress: ${PLACEHOLDER.stress_score} (scale 0-3, where 0 = no stress, 3 = high stress)
 
 REGRAS DE INTERPRETAÇÃO:
 
@@ -46,6 +47,13 @@ Sono acima de 8h com qualidade: condição de alta performance
 Strain acima de 15: corpo ainda se recuperando do esforço físico anterior
 Strain 8-14: equilíbrio saudável
 Strain abaixo de 8: corpo descansado fisicamente
+
+Stress 0-1: baixo, condições ideais para foco prolongado e tarefas cognitivas exigentes
+Stress 1-2: moderado, monitore a energia, alterne foco com pausas curtas
+Stress 2-3: elevado, prefira tarefas cognitivas mais leves e inclua pausas ativas frequentes
+Stress acima de 3: alto, priorize recuperação, evite carga cognitiva pesada e faça pausas ativas
+
+Ao gerar a recommendation, considere o nível de stress: stress alto deve sugerir tarefas cognitivas mais leves e pausas ativas; stress baixo favorece blocos de foco profundo.
 
 Gere a resposta no seguinte formato JSON exato:
 
