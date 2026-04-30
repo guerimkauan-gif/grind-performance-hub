@@ -1484,6 +1484,28 @@ function SectionCheckin() {
   );
 }
 
+function SliderWithSteppers({ value, min, max, step, onChange }: { value: number; min: number; max: number; step: number; onChange: (v: number) => void }) {
+  const clamp = (v: number) => Math.min(max, Math.max(min, Math.round(v / step) * step));
+  const btnStyle: React.CSSProperties = {
+    width: 32, height: 32, flexShrink: 0,
+    background: "#1A1A1A", border: "1px solid #2A2A2A", borderRadius: 0,
+    color: "#FFFFFF", fontFamily: "'Space Grotesk', sans-serif", fontSize: 16, fontWeight: 700,
+    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0,
+  };
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <button type="button" style={btnStyle} onClick={() => onChange(clamp(value - step))} aria-label="Decrease">−</button>
+      <input
+        type="range" min={min} max={max} step={step} value={value}
+        onChange={(e) => onChange(parseFloat(e.target.value))}
+        className="grind-range"
+        style={{ flex: 1 }}
+      />
+      <button type="button" style={btnStyle} onClick={() => onChange(clamp(value + step))} aria-label="Increase">+</button>
+    </div>
+  );
+}
+
 function CheckinCard({ label, value, children }: { label: string; value: React.ReactNode; children: React.ReactNode }) {
   return (
     <div style={{ background: "#111111", border: "1px solid #2A2A2A", padding: 24 }}>
