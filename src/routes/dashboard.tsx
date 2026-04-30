@@ -566,7 +566,7 @@ function LineChart({ data, days }: { data: number[]; days: string[] }) {
           return (
             <g key={t}>
               <line x1={padL} y1={y} x2={W - padR} y2={y} stroke="#1A1A1A" strokeWidth={1} />
-              <text x={padL - 8} y={y + 3} fontFamily="'JetBrains Mono', monospace" fontSize={10} fill="#555555" textAnchor="end">{t}</text>
+              <text x={padL - 8} y={y + 4} fontFamily="'JetBrains Mono', monospace" fontSize={13} fill="#FFFFFF" fillOpacity={0.85} textAnchor="end">{t}</text>
             </g>
           );
         })}
@@ -583,7 +583,7 @@ function LineChart({ data, days }: { data: number[]; days: string[] }) {
           </g>
         ))}
         {points.map((p, i) => (
-          <text key={i} x={p.x} y={H - 8} fontFamily="'JetBrains Mono', monospace" fontSize={10} fill="#555555" textAnchor="middle">{days[i]}</text>
+          <text key={i} x={p.x} y={H - 6} fontFamily="'JetBrains Mono', monospace" fontSize={13} fill="#FFFFFF" fillOpacity={0.85} textAnchor="middle">{days[i]}</text>
         ))}
       </svg>
     </div>
