@@ -526,28 +526,6 @@ function SectionCorpo() {
               <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 400, fontSize: 12, color: "#555555" }}>{m.note}</div>
             </div>
           ))}
-          <div style={{ background: "#1A1A1A", border: "1px solid #2A2A2A", padding: 24, gridColumn: "1 / -1" }}>
-            <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: "#A0A0A0", marginBottom: 12 }}>{stressMetric.name}</div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 16 }}>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 36, color: "#FFFFFF" }}>{stressMetric.value}</span>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, color: "#555555" }}>/ {stressMax}</span>
-            </div>
-            <div style={{ height: 2, background: "#0A0A0A", marginBottom: 12 }}>
-              <div className="grind-bar-fill" style={{ height: "100%", background: "#E8003D", width: 0, ["--bar-target" as never]: `${stressMetric.pct}%` }} />
-            </div>
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 400, fontSize: 12, color: "#555555" }}>{stressMetric.note}</div>
-          </div>
-          <div style={{ background: "#1A1A1A", border: "1px solid #2A2A2A", padding: 24, gridColumn: "1 / -1" }}>
-            <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: "#A0A0A0", marginBottom: 12 }}>{stepsMetric.name}</div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 16 }}>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 36, color: "#FFFFFF" }}>{stepsMetric.value}</span>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, color: "#555555" }}>{stepsMetric.unit}</span>
-            </div>
-            <div style={{ height: 2, background: "#0A0A0A", marginBottom: 12 }}>
-              <div className="grind-bar-fill" style={{ height: "100%", background: "#E8003D", width: 0, ["--bar-target" as never]: `${stepsMetric.pct}%` }} />
-            </div>
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 400, fontSize: 12, color: "#555555" }}>{stepsMetric.note}</div>
-          </div>
         </div>
       </section>
 
