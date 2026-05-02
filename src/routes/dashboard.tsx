@@ -1306,6 +1306,94 @@ function todayLocalISO() {
   return `${y}-${m}-${day}`;
 }
 
+type DeviceKey = "whoop" | "garmin" | "oura";
+type DeviceMeta = { key: DeviceKey; name: string; letter: string; desc: string };
+const DEVICES: DeviceMeta[] = [
+  { key: "whoop", name: "WHOOP", letter: "W", desc: "Recuperação, strain e dados de sono em tempo real" },
+  { key: "garmin", name: "GARMIN", letter: "G", desc: "Métricas de treino, HRV e performance atlética" },
+  { key: "oura", name: "OURA RING", letter: "O", desc: "Qualidade do sono, prontidão e frequência cardíaca" },
+];
+
+function SectionDispositivos() {
+  const [connected, setConnected] = useState<Record<DeviceKey, boolean>>({ whoop: false, garmin: false, oura: false });
+  const [pendingMsg, setPendingMsg] = useState<Record<DeviceKey, boolean>>({ whoop: false, garmin: false, oura: false });
+
+  const handleConnect = (k: DeviceKey) => setPendingMsg((s) => ({ ...s, [k]: true }));
+  const handleDisconnect = (k: DeviceKey) => {
+    setConnected((s) => ({ ...s, [k]: false }));
+    setPendingMsg((s) => ({ ...s, [k]: false }));
+  };
+
+  return (
+    <div style={{ maxWidth: 800, margin: "0 auto", display: "grid", gap: 40 }}>
+      <div>
+        <SectionLabel>INTEGRAÇÕES · WEARABLES</SectionLabel>
+        <div className="grind-main-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginTop: 16 }}>
+          {DEVICES.map((d) => {
+            const isConn = connected[d.key];
+            return (
+              <div key={d.key} style={{ background: "#111111", border: "1px solid #2A2A2A", padding: 24 }}>
+                <div style={{ width: 56, height: 56, background: "#1A1A1A", border: "1px solid #2A2A2A", display: "flex", alignItems: "center", justifyContent: "center", color: "#E8003D", fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 24 }}>
+                  {d.letter}
+                </div>
+                <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 16, color: "#FFFFFF", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 16 }}>
+                  {d.name}
+                </div>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "#555555", lineHeight: 1.5, marginTop: 8 }}>
+                  {d.desc}
+                </div>
+                <div style={{ height: 1, background: "#2A2A2A", margin: "20px 0" }} />
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span
+                    className={isConn ? "grind-live-square" : ""}
+                    style={{ width: 6, height: 6, background: isConn ? "#E8003D" : "#333333", display: "inline-block" }}
+                  />
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: isConn ? "#A0A0A0" : "#555555", textTransform: "uppercase", letterSpacing: "0.15em" }}>
+                    {isConn ? "CONECTADO" : "NÃO CONECTADO"}
+                  </span>
+                </div>
+                <button
+                  onClick={() => (isConn ? handleDisconnect(d.key) : handleConnect(d.key))}
+                  style={{
+                    marginTop: 16,
+                    width: "100%",
+                    height: 44,
+                    background: isConn ? "transparent" : "#E8003D",
+                    border: isConn ? "1px solid #2A2A2A" : "none",
+                    color: isConn ? "#A0A0A0" : "#FFFFFF",
+                    fontFamily: "'Space Grotesk', sans-serif",
+                    fontWeight: 700,
+                    fontSize: 11,
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    cursor: "pointer",
+                  }}
+                >
+                  {isConn ? "DESCONECTAR" : "CONECTAR"}
+                </button>
+                {pendingMsg[d.key] && !isConn && (
+                  <div style={{ marginTop: 12, fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "#A0A0A0" }}>
+                    Integração com {d.name} será ativada em breve.
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div style={{ borderLeft: "3px solid #E8003D", background: "#111111", padding: "20px 24px" }}>
+        <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 13, color: "#FFFFFF", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 12 }}>
+          POR QUE CONECTAR?
+        </div>
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: "#A0A0A0", lineHeight: 1.6 }}>
+          Seus dados biométricos alimentam o plano diário gerado pela IA. Quanto mais preciso o input, mais inteligente o output.
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SectionCheckin() {
   const [data, setData] = useState<CheckinData>({
     focus_hours: 4,
