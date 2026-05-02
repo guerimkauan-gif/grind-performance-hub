@@ -196,8 +196,13 @@ const IconMoon = () => (
     <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
   </svg>
 );
+const IconDevice = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555555" strokeWidth="2">
+    <rect x="6" y="3" width="12" height="18" /><line x1="10" y1="7" x2="14" y2="7" /><circle cx="12" cy="17" r="1" />
+  </svg>
+);
 const ICONS: Record<SectionKey, () => React.ReactElement> = {
-  HOJE: IconSun, CORPO: IconPulse, PROGRESSO: IconBars, "CALENDÁRIO": IconCalendar, TAREFAS: IconChecklist, "CHECK-IN": IconMoon, OBJETIVO: IconTarget,
+  HOJE: IconSun, CORPO: IconPulse, PROGRESSO: IconBars, "CALENDÁRIO": IconCalendar, TAREFAS: IconChecklist, "CHECK-IN": IconMoon, DISPOSITIVOS: IconDevice, OBJETIVO: IconTarget,
 };
 
 type Profile = {
