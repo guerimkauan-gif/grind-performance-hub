@@ -74,7 +74,7 @@ function OnboardingPage() {
   const [hours, setHours] = useState("");
   const [days, setDays] = useState("");
   const [deadline, setDeadline] = useState("");
-  const [whoopMsg, setWhoopMsg] = useState<string | null>(null);
+  const [deviceMsgs, setDeviceMsgs] = useState<Record<"whoop" | "garmin" | "oura", string | null>>({ whoop: null, garmin: null, oura: null });
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -232,25 +232,48 @@ function OnboardingPage() {
 
         {step === 3 && (
           <div>
-            <StepLabel>CONECTAR WHOOP</StepLabel>
-            <h1 style={HEADLINE}>Conecte sua pulseira.</h1>
-            <p style={BODY}>O GRIND usa seus dados do Whoop para personalizar seu plano diário. Sem Whoop, o sistema não consegue ler seu corpo.</p>
+            <StepLabel>CONECTAR DISPOSITIVOS</StepLabel>
+            <h1 style={HEADLINE}>Conecte seus wearables.</h1>
+            <p style={BODY}>O GRIND usa seus dados biométricos para personalizar seu plano diário. Conecte um ou mais dispositivos para ativar a inteligência do sistema.</p>
 
-            <div style={{ display: "flex", justifyContent: "center", marginBottom: 32 }}>
-              <div style={{ width: 56, height: 56, background: "#111111", border: "1px solid #2A2A2A", display: "flex", alignItems: "center", justifyContent: "center", color: "#E8003D", fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 24 }}>
-                W
-              </div>
+            <div style={{ display: "grid", gap: 16 }}>
+              {([
+                { key: "whoop" as const, name: "WHOOP", letter: "W", color: "#E8003D", desc: "Recuperação, strain e sono em tempo real" },
+                { key: "garmin" as const, name: "GARMIN", letter: "G", color: "#00B4D8", desc: "Treino, HRV e performance atlética" },
+                { key: "oura" as const, name: "OURA RING", letter: "O", color: "#FFFFFF", desc: "Prontidão, sono e frequência cardíaca" },
+              ]).map((d) => {
+                const pending = deviceMsgs[d.key] !== null;
+                return (
+                  <div key={d.key} style={{ background: "#111111", border: "1px solid #2A2A2A", padding: "20px 24px", display: "flex", gap: 16, alignItems: "flex-start" }}>
+                    <div style={{ width: 48, height: 48, background: "#1A1A1A", border: "1px solid #2A2A2A", display: "flex", alignItems: "center", justifyContent: "center", color: d.color, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 20, flexShrink: 0 }}>
+                      {d.letter}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 14, color: "#FFFFFF", textTransform: "uppercase", letterSpacing: "0.08em" }}>{d.name}</div>
+                      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "#555555", lineHeight: 1.5, marginTop: 6, marginBottom: 12 }}>{d.desc}</div>
+                      <button
+                        disabled={pending}
+                        onClick={() => setDeviceMsgs((s) => ({ ...s, [d.key]: `Integração com ${d.name} será ativada em breve.` }))}
+                        style={pending
+                          ? { width: "100%", height: 40, background: "transparent", border: "1px solid #2A2A2A", color: "#555555", fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", cursor: "not-allowed" }
+                          : { width: "100%", height: 40, background: "#E8003D", border: "none", color: "#FFFFFF", fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer" }}
+                      >
+                        {pending ? "EM BREVE" : "CONECTAR"}
+                      </button>
+                      {deviceMsgs[d.key] && (
+                        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#A0A0A0", marginTop: 8 }}>{deviceMsgs[d.key]}</div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
-            <button style={PRIMARY_BTN} onClick={() => setWhoopMsg("Integração com Whoop será ativada em breve.")}>
-              CONECTAR MEU WHOOP
-            </button>
-            {whoopMsg && <div style={{ color: "#A0A0A0", fontSize: 13, textAlign: "center", marginTop: 16 }}>{whoopMsg}</div>}
-
             <div style={{ height: 1, background: "#2A2A2A", margin: "24px 0" }} />
+            <button style={PRIMARY_BTN} onClick={() => setStep(4)}>CONTINUAR</button>
             <button
               onClick={() => setStep(4)}
-              style={{ background: "transparent", border: "none", color: "#555555", fontSize: 12, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.1em", width: "100%", textAlign: "center", padding: 8 }}
+              style={{ background: "transparent", border: "none", color: "#555555", fontSize: 12, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.1em", width: "100%", textAlign: "center", padding: 8, marginTop: 8 }}
             >
               PULAR POR AGORA
             </button>
