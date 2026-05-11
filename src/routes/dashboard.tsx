@@ -302,7 +302,7 @@ function DashboardPage() {
       {/* Main */}
       <main key={section} className="grind-fade-in grind-main" style={{ maxWidth: 1280, margin: "0 auto", padding: 32 }}>
         {section === "HOJE" && <SectionHoje />}
-        {section === "CORPO" && <SectionCorpo />}
+        {section === "CORPO" && <SectionCorpo onNavigate={setSection} />}
         {section === "PROGRESSO" && <SectionProgresso />}
         {section === "CALENDÁRIO" && <SectionCalendario />}
         {section === "TAREFAS" && <SectionTarefas />}
