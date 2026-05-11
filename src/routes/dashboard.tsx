@@ -506,33 +506,106 @@ function SectionHoje() {
 }
 
 /* ====================== CORPO ====================== */
-function SectionCorpo() {
-  const metrics = [
-    { name: "RECOVERY", value: "87", unit: "%", pct: 87, note: "Excelente — dia de alta performance" },
-    { name: "HRV", value: "62", unit: "ms", pct: 65, note: "Estável — foco profundo recomendado" },
-    { name: "SONO", value: "7h 32min", unit: "", pct: 80, note: "Adequado — ritmo normal" },
-    { name: "STRAIN", value: "11.4", unit: "", pct: 55, note: "Equilibrado — manter o ritmo" },
+type DeviceKey = "whoop" | "garmin" | "oura";
+type CorpoSelection = "todos" | DeviceKey;
+
+const DEVICE_BADGE_BG: Record<DeviceKey, string> = { whoop: "#E8003D", garmin: "#00B4D8", oura: "#FFFFFF" };
+const DEVICE_BADGE_FG: Record<DeviceKey, string> = { whoop: "#FFFFFF", garmin: "#0A0A0A", oura: "#0A0A0A" };
+const DEVICE_LETTER: Record<DeviceKey, string> = { whoop: "W", garmin: "G", oura: "O" };
+const DEVICE_LABEL: Record<DeviceKey, string> = { whoop: "WHOOP", garmin: "GARMIN", oura: "OURA" };
+
+function SectionCorpo({ onNavigate }: { onNavigate: (s: SectionKey) => void }) {
+  const [connectedDevices] = useState<DeviceKey[]>(["whoop", "oura"]);
+  const [selected, setSelected] = useState<CorpoSelection>("todos");
+  const [open, setOpen] = useState(false);
+
+  const options: { key: CorpoSelection; label: string }[] = [
+    { key: "todos", label: "TODOS OS DISPOSITIVOS" },
+    ...connectedDevices.map((d) => ({ key: d as CorpoSelection, label: DEVICE_LABEL[d] })),
   ];
+
+  // Guard: if currently selected device gets disconnected, fall back to todos
+  useEffect(() => {
+    if (selected !== "todos" && !connectedDevices.includes(selected as DeviceKey)) {
+      setSelected("todos");
+    }
+  }, [connectedDevices, selected]);
+
+  const selectedLabel = options.find((o) => o.key === selected)?.label ?? "TODOS OS DISPOSITIVOS";
+
   return (
     <div style={{ maxWidth: 800, margin: "0 auto", display: "grid", gap: 40 }}>
       <section>
         <SectionLabel>CORPO · HOJE</SectionLabel>
         <div style={SEP} />
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
-          {metrics.map((m) => (
-            <div key={m.name} style={{ background: "#1A1A1A", border: "1px solid #2A2A2A", padding: 24 }}>
-              <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: "#A0A0A0", marginBottom: 12 }}>{m.name}</div>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 16 }}>
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 36, color: "#FFFFFF" }}>{m.value}</span>
-                {m.unit && <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, color: "#555555" }}>{m.unit}</span>}
-              </div>
-              <div style={{ height: 2, background: "#0A0A0A", marginBottom: 12 }}>
-                <div className="grind-bar-fill" style={{ height: "100%", background: "#E8003D", width: 0, ["--bar-target" as never]: `${m.pct}%` }} />
-              </div>
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 400, fontSize: 12, color: "#555555" }}>{m.note}</div>
+
+        {connectedDevices.length === 0 ? (
+          <button
+            onClick={() => onNavigate("DISPOSITIVOS")}
+            style={{
+              width: "100%", textAlign: "left", cursor: "pointer",
+              background: "#111111", border: "1px solid #2A2A2A", borderLeft: "3px solid #E8003D",
+              padding: "16px 20px", color: "#A0A0A0", fontSize: 12,
+              fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.04em",
+            }}
+          >
+            NENHUM DISPOSITIVO CONECTADO — ACESSE A SEÇÃO DISPOSITIVOS PARA CONFIGURAR.
+          </button>
+        ) : (
+          <>
+            <div style={{ position: "relative", width: 220, marginBottom: 20 }}>
+              <button
+                onClick={() => setOpen((o) => !o)}
+                style={{
+                  width: "100%", height: 40, background: "#111111", border: "1px solid #2A2A2A",
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  padding: "0 14px", cursor: "pointer",
+                  fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 11,
+                  letterSpacing: "0.12em", textTransform: "uppercase", color: "#FFFFFF",
+                }}
+              >
+                <span>{selectedLabel}</span>
+                <svg width="10" height="10" viewBox="0 0 10 10" style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>
+                  <polyline points="2,3 5,7 8,3" fill="none" stroke="#E8003D" strokeWidth="1.5" />
+                </svg>
+              </button>
+              {open && (
+                <div style={{ position: "absolute", top: "100%", left: 0, width: "100%", background: "#111111", border: "1px solid #2A2A2A", zIndex: 50, marginTop: -1 }}>
+                  {options.map((o) => (
+                    <button
+                      key={o.key}
+                      onClick={() => { setSelected(o.key); setOpen(false); }}
+                      className="grind-corpo-opt"
+                      style={{
+                        display: "block", width: "100%", textAlign: "left",
+                        background: "transparent", border: "none", borderLeft: "2px solid transparent",
+                        padding: "10px 14px", cursor: "pointer",
+                        fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 11,
+                        letterSpacing: "0.12em", textTransform: "uppercase",
+                        color: o.key === selected ? "#FFFFFF" : "#A0A0A0",
+                      }}
+                    >
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          ))}
-        </div>
+
+            <style>{`
+              .grind-corpo-opt:hover { border-left-color: #E8003D !important; background: #1A1A1A !important; color: #FFFFFF !important; }
+              .grind-corpo-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+              @media (min-width: 768px) { .grind-corpo-grid { grid-template-columns: repeat(4, 1fr); } }
+            `}</style>
+
+            <div key={selected} className="grind-fade-in">
+              {selected === "todos" && <DashCorpoCruzado connected={connectedDevices} />}
+              {selected === "whoop" && connectedDevices.includes("whoop") && <DashCorpoWhoop />}
+              {selected === "oura" && connectedDevices.includes("oura") && <DashCorpoOura />}
+              {selected === "garmin" && connectedDevices.includes("garmin") && <DashCorpoGarmin />}
+            </div>
+          </>
+        )}
       </section>
 
       <section>
@@ -548,6 +621,159 @@ function SectionCorpo() {
           HRV em queda nos últimos 3 dias — considere reduzir a carga amanhã.
         </div>
       </section>
+    </div>
+  );
+}
+
+function CorpoCard({ label, value, device, gauge, pct, children }: { label: string; value: string; device?: DeviceKey; gauge?: number; pct?: number; children?: React.ReactNode }) {
+  return (
+    <div style={{ position: "relative", background: "#111111", border: "1px solid #2A2A2A", padding: 20, minHeight: 120 }}>
+      {device && (
+        <div style={{
+          position: "absolute", top: 8, right: 8, width: 20, height: 20,
+          background: DEVICE_BADGE_BG[device], color: DEVICE_BADGE_FG[device],
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 11, letterSpacing: 0,
+        }}>{DEVICE_LETTER[device]}</div>
+      )}
+      <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, color: "#A0A0A0", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 12, paddingRight: 24 }}>{label}</div>
+      {gauge !== undefined ? (
+        <MiniGauge value={gauge} label={value} />
+      ) : (
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 22, color: "#FFFFFF", lineHeight: 1.1 }}>{value}</div>
+      )}
+      {pct !== undefined && (
+        <div style={{ height: 2, background: "#0A0A0A", marginTop: 12 }}>
+          <div className="grind-bar-fill" style={{ height: "100%", background: "#E8003D", width: 0, ["--bar-target" as never]: `${pct}%` }} />
+        </div>
+      )}
+      {children}
+    </div>
+  );
+}
+
+function MiniGauge({ value, label }: { value: number; label: string }) {
+  const size = 64, stroke = 3;
+  const r = (size - stroke) / 2;
+  const circ = 2 * Math.PI * r;
+  const target = circ * (1 - Math.max(0, Math.min(100, value)) / 100);
+  return (
+    <div style={{ position: "relative", width: size, height: size }}>
+      <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#2A2A2A" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#E8003D" strokeWidth={stroke}
+          strokeDasharray={circ} className="grind-ring-arc"
+          style={{ ["--ring-circ" as never]: `${circ}px`, ["--ring-target" as never]: `${target}px` }} />
+      </svg>
+      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 16, color: "#FFFFFF" }}>{label}</span>
+      </div>
+    </div>
+  );
+}
+
+function DashCorpoWhoop() {
+  return (
+    <div className="grind-corpo-grid">
+      <CorpoCard label="RECOVERY SCORE" value="87%" device="whoop" gauge={87} />
+      <CorpoCard label="HRV" value="62 ms" device="whoop" pct={65} />
+      <CorpoCard label="STRAIN" value="11.4" device="whoop" pct={57} />
+      <CorpoCard label="FC EM REPOUSO" value="52 bpm" device="whoop" />
+      <CorpoCard label="SPO2" value="98%" device="whoop" />
+      <CorpoCard label="SONO PROFUNDO" value="1h 42min" device="whoop" />
+      <CorpoCard label="SONO REM" value="2h 08min" device="whoop" />
+    </div>
+  );
+}
+
+function DashCorpoOura() {
+  return (
+    <div className="grind-corpo-grid">
+      <CorpoCard label="READINESS SCORE" value="82%" device="oura" gauge={82} />
+      <CorpoCard label="SLEEP SCORE" value="79%" device="oura" pct={79} />
+      <CorpoCard label="ACTIVITY SCORE" value="74%" device="oura" />
+      <CorpoCard label="HRV BALANCE" value="68 ms" device="oura" />
+      <CorpoCard label="TEMP. CORPORAL" value="+0.2°C" device="oura" />
+      <CorpoCard label="PASSOS" value="8.420" device="oura" />
+      <CorpoCard label="CALORIAS ATIVAS" value="520 kcal" device="oura" />
+    </div>
+  );
+}
+
+function DashCorpoGarmin() {
+  return (
+    <div className="grind-corpo-grid">
+      <CorpoCard label="BODY BATTERY" value="76%" device="garmin" gauge={76} />
+      <CorpoCard label="STRESS SCORE" value="28" device="garmin" pct={28} />
+      <CorpoCard label="VO2 MAX" value="52" device="garmin" />
+      <CorpoCard label="FC MÉDIA" value="68 bpm" device="garmin" />
+      <CorpoCard label="PASSOS" value="9.150" device="garmin" />
+      <CorpoCard label="CALORIAS" value="2.340 kcal" device="garmin" />
+    </div>
+  );
+}
+
+function DashCorpoCruzado({ connected }: { connected: DeviceKey[] }) {
+  // Per-device data points relevant for cross view
+  const data: Record<DeviceKey, { hrv?: string; sono?: string; fcRepouso?: string; recuperacao?: number }> = {
+    whoop: { hrv: "62 ms", sono: "7h 32min", fcRepouso: "52 bpm", recuperacao: 87 },
+    oura:  { hrv: "68 ms", sono: "7h 48min", recuperacao: 82 },
+    garmin:{ fcRepouso: "55 bpm", recuperacao: 76 },
+  };
+
+  type Row = { metric: string; key: "hrv" | "sono" | "fcRepouso" };
+  const rows: Row[] = [
+    { metric: "HRV", key: "hrv" },
+    { metric: "SONO", key: "sono" },
+    { metric: "FC EM REPOUSO", key: "fcRepouso" },
+  ];
+  const visibleRows = rows.filter((r) => connected.filter((d) => data[d][r.key] !== undefined).length >= 2);
+
+  const recDevices = connected.filter((d) => data[d].recuperacao !== undefined);
+  const recAvg = recDevices.length > 0
+    ? Math.round(recDevices.reduce((a, d) => a + (data[d].recuperacao ?? 0), 0) / recDevices.length)
+    : null;
+  const showRecuperacao = recDevices.length >= 2;
+
+  return (
+    <div style={{ display: "grid", gap: 16 }}>
+      {showRecuperacao && recAvg !== null && (
+        <div style={{ background: "#111111", border: "1px solid #2A2A2A", borderLeft: "3px solid #E8003D", padding: 24 }}>
+          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: "#A0A0A0", marginBottom: 12 }}>RECUPERAÇÃO GERAL · MÉDIA</div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 16, flexWrap: "wrap" }}>
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 48, color: "#FFFFFF", lineHeight: 1 }}>{recAvg}%</span>
+            <div style={{ display: "flex", gap: 16 }}>
+              {recDevices.map((d) => (
+                <div key={d}>
+                  <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.12em", color: "#A0A0A0" }}>{DEVICE_LABEL[d]}</div>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, color: "#FFFFFF" }}>{data[d].recuperacao}%</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {visibleRows.map((r) => {
+        const present = connected.filter((d) => data[d][r.key] !== undefined);
+        return (
+          <div key={r.key} style={{ background: "#111111", border: "1px solid #2A2A2A", padding: 20 }}>
+            <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: "#A0A0A0", marginBottom: 14 }}>{r.metric}</div>
+            <div style={{ display: "grid", gridTemplateColumns: `repeat(${present.length}, 1fr)`, gap: 16 }}>
+              {present.map((d) => (
+                <div key={d}>
+                  <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.12em", color: "#A0A0A0", marginBottom: 6 }}>{DEVICE_LABEL[d]}</div>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 22, color: "#FFFFFF" }}>{data[d][r.key]}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+
+      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "#A0A0A0", marginTop: 4 }}>
+        DADOS CRUZADOS — MÉDIAS CALCULADAS ENTRE OS DISPOSITIVOS CONECTADOS
+      </div>
     </div>
   );
 }
