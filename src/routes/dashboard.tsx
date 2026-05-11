@@ -1306,7 +1306,6 @@ function todayLocalISO() {
   return `${y}-${m}-${day}`;
 }
 
-type DeviceKey = "whoop" | "garmin" | "oura";
 type DeviceMeta = { key: DeviceKey; name: string; letter: string; desc: string };
 const DEVICES: DeviceMeta[] = [
   { key: "whoop", name: "WHOOP", letter: "W", desc: "Recuperação, strain e dados de sono em tempo real" },
