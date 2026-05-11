@@ -74,7 +74,7 @@ function OnboardingPage() {
   const [hours, setHours] = useState("");
   const [days, setDays] = useState("");
   const [deadline, setDeadline] = useState("");
-  const [whoopMsg, setWhoopMsg] = useState<string | null>(null);
+  const [deviceMsgs, setDeviceMsgs] = useState<Record<"whoop" | "garmin" | "oura", string | null>>({ whoop: null, garmin: null, oura: null });
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
