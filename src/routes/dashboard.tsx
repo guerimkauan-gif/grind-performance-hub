@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { GrindLogo } from "@/components/GrindLogo";
@@ -10,8 +10,8 @@ export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
 });
 
-type SectionKey = "HOJE" | "CORPO" | "PROGRESSO" | "CALENDÁRIO" | "TAREFAS" | "CHECK-IN" | "DISPOSITIVOS" | "OBJETIVO";
-const SECTIONS: SectionKey[] = ["HOJE", "CORPO", "PROGRESSO", "CALENDÁRIO", "TAREFAS", "CHECK-IN", "DISPOSITIVOS", "OBJETIVO"];
+type SectionKey = "HOJE" | "CORPO" | "PROGRESSO" | "CALENDÁRIO" | "TAREFAS" | "CHECK-IN" | "DISPOSITIVOS" | "OBJETIVO" | "GRIND AI";
+const SECTIONS: SectionKey[] = ["HOJE", "CORPO", "PROGRESSO", "CALENDÁRIO", "TAREFAS", "CHECK-IN", "DISPOSITIVOS", "OBJETIVO", "GRIND AI"];
 
 const LABEL: React.CSSProperties = {
   fontSize: 11,
@@ -201,8 +201,21 @@ const IconDevice = () => (
     <rect x="6" y="3" width="12" height="18" /><line x1="10" y1="7" x2="14" y2="7" /><circle cx="12" cy="17" r="1" />
   </svg>
 );
+const IconGrindAI = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555555" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M16 4c-3.3 0-6 2.5-6 5.7 0 1 .3 1.9.7 2.7l-2.7 2.7v2.4h2.4v2.1h2.6v2.4h3v-3.6c2.6-.7 4.5-3 4.5-5.7C20.5 6.5 17.8 4 16 4z" />
+    <circle cx="13" cy="8" r="0.9" fill="#555555" />
+    <circle cx="17" cy="8.5" r="0.9" fill="#555555" />
+    <circle cx="14.5" cy="11.5" r="0.9" fill="#555555" />
+    <circle cx="17.5" cy="12" r="0.9" fill="#555555" />
+    <line x1="13" y1="8" x2="17" y2="8.5" />
+    <line x1="13" y1="8" x2="14.5" y2="11.5" />
+    <line x1="17" y1="8.5" x2="17.5" y2="12" />
+    <line x1="14.5" y1="11.5" x2="17.5" y2="12" />
+  </svg>
+);
 const ICONS: Record<SectionKey, () => React.ReactElement> = {
-  HOJE: IconSun, CORPO: IconPulse, PROGRESSO: IconBars, "CALENDÁRIO": IconCalendar, TAREFAS: IconChecklist, "CHECK-IN": IconMoon, DISPOSITIVOS: IconDevice, OBJETIVO: IconTarget,
+  HOJE: IconSun, CORPO: IconPulse, PROGRESSO: IconBars, "CALENDÁRIO": IconCalendar, TAREFAS: IconChecklist, "CHECK-IN": IconMoon, DISPOSITIVOS: IconDevice, OBJETIVO: IconTarget, "GRIND AI": IconGrindAI,
 };
 
 type Profile = {
@@ -264,11 +277,21 @@ function DashboardPage() {
         </div>
 
         <nav className="grind-tabs-desktop">
-          {SECTIONS.map((s) => (
-            <button key={s} className={`grind-tab ${section === s ? "active" : ""}`} onClick={() => setSection(s)}>
-              {s}
-            </button>
-          ))}
+          {SECTIONS.map((s) => {
+            const isAi = s === "GRIND AI";
+            const Icon = ICONS[s];
+            return (
+              <button
+                key={s}
+                className={`grind-tab ${section === s ? "active" : ""}`}
+                onClick={() => setSection(s)}
+                title={isAi ? "GRIND AI" : undefined}
+                style={isAi ? { padding: "0 16px", display: "inline-flex", alignItems: "center", justifyContent: "center" } : undefined}
+              >
+                {isAi ? <Icon /> : s}
+              </button>
+            );
+          })}
         </nav>
 
         <button onClick={logout} className="dash-logout" style={{ height: 32, padding: "0 14px", background: "transparent", border: "1px solid #2A2A2A", color: "#A0A0A0", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", fontFamily: "'Space Grotesk', sans-serif", cursor: "pointer", transition: "border-color 0.15s, color 0.15s" }}>
@@ -309,6 +332,7 @@ function DashboardPage() {
         {section === "CHECK-IN" && <SectionCheckin />}
         {section === "DISPOSITIVOS" && <SectionDispositivos />}
         {section === "OBJETIVO" && <SectionObjetivo profile={profile} userId={session?.user.id} onSaved={(p) => setProfile((cur) => cur ? { ...cur, ...p } : cur)} />}
+        {section === "GRIND AI" && <SectionGrindAI profile={profile} userId={session?.user.id} userEmail={session?.user.email ?? null} userMeta={session?.user.user_metadata ?? null} />}
       </main>
     </div>
   );
@@ -1869,6 +1893,179 @@ function ScaleLabels({ labels, active }: { labels: string[]; active: number }) {
           {l}
         </div>
       ))}
+    </div>
+  );
+}
+
+/* ====================== GRIND AI ====================== */
+function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
+  profile: Profile | null;
+  userId: string | undefined;
+  userEmail: string | null;
+  userMeta: Record<string, any> | null;
+}) {
+  const [messages, setMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "BOM DIA" : hour < 18 ? "BOA TARDE" : "BOA NOITE";
+
+  const firstName = (() => {
+    const meta = userMeta || {};
+    const fromMeta: string | undefined = meta.full_name || meta.name || meta.first_name;
+    if (fromMeta && typeof fromMeta === "string") return fromMeta.trim().split(/\s+/)[0].toUpperCase();
+    if (userEmail) return userEmail.split("@")[0].split(/[._-]/)[0].toUpperCase();
+    return "ATLETA";
+  })();
+
+  const scrollRef = React.useRef<HTMLDivElement | null>(null);
+  const textRef = React.useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [messages, loading]);
+
+  const autoResize = (el: HTMLTextAreaElement) => {
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 160) + "px";
+  };
+
+  const send = async (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed || loading) return;
+    setError(null);
+    const newMessages = [...messages, { role: "user" as const, content: trimmed }];
+    setMessages(newMessages);
+    setInput("");
+    if (textRef.current) { textRef.current.style.height = "auto"; }
+    setLoading(true);
+
+    const context = {
+      recovery: 87,
+      hrv: 62,
+      sleep: "7h 32min",
+      strain: 11.4,
+      goal: profile?.goal_name ?? null,
+      deadline: profile?.deadline ?? null,
+      dream: profile?.dream ?? null,
+      daily_hours: profile?.daily_hours ?? null,
+      days_per_week: profile?.days_per_week ?? null,
+      user_id: userId ?? null,
+    };
+
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke("grind-ai-chat", {
+        body: { messages: newMessages, context },
+      });
+      if (fnErr) throw fnErr;
+      const reply: string = (data as any)?.reply ?? "";
+      setMessages((m) => [...m, { role: "assistant", content: reply || "—" }]);
+    } catch (e: any) {
+      console.error(e);
+      setError("Falha ao consultar o GRIND AI. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const suggestions = [
+    "COMO ESTÁ MEU CORPO HOJE?",
+    "ESTOU NO PRAZO DO MEU OBJETIVO?",
+    "O QUE DEVO PRIORIZAR AGORA?",
+  ];
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send(input);
+    }
+  };
+
+  return (
+    <div style={{ maxWidth: 800, margin: "0 auto", display: "flex", flexDirection: "column", height: "calc(100vh - 120px)", gap: 0 }}>
+      <style>{`
+        @keyframes grind-ai-blink { 0%, 80%, 100% { opacity: 0.3; } 40% { opacity: 1; } }
+        .grind-ai-suggest { background: #111111; border: 1px solid #2A2A2A; padding: 10px 20px; font-family: 'Space Grotesk', sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #A0A0A0; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+        .grind-ai-suggest:hover { border-color: #E8003D; color: #FFFFFF; }
+        .grind-ai-dot { width: 6px; height: 6px; background: #E8003D; display: inline-block; margin-right: 4px; animation: grind-ai-blink 1.2s infinite both; }
+        .grind-ai-dot:nth-child(2) { animation-delay: 0.15s; }
+        .grind-ai-dot:nth-child(3) { animation-delay: 0.3s; }
+      `}</style>
+
+      {messages.length === 0 ? (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1, gap: 24, padding: 24 }}>
+          <div style={{ transform: "scale(2.66)" }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8003D" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M16 4c-3.3 0-6 2.5-6 5.7 0 1 .3 1.9.7 2.7l-2.7 2.7v2.4h2.4v2.1h2.6v2.4h3v-3.6c2.6-.7 4.5-3 4.5-5.7C20.5 6.5 17.8 4 16 4z" />
+              <circle cx="13" cy="8" r="0.9" fill="#E8003D" />
+              <circle cx="17" cy="8.5" r="0.9" fill="#E8003D" />
+              <circle cx="14.5" cy="11.5" r="0.9" fill="#E8003D" />
+              <circle cx="17.5" cy="12" r="0.9" fill="#E8003D" />
+              <line x1="13" y1="8" x2="17" y2="8.5" />
+              <line x1="13" y1="8" x2="14.5" y2="11.5" />
+              <line x1="17" y1="8.5" x2="17.5" y2="12" />
+              <line x1="14.5" y1="11.5" x2="17.5" y2="12" />
+            </svg>
+          </div>
+          <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: "clamp(24px, 4vw, 36px)", color: "#FFFFFF", letterSpacing: "0.05em", margin: 0, textAlign: "center" }}>
+            {greeting}, {firstName}.
+          </h1>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "#555555", letterSpacing: "0.15em" }}>
+            O QUE VAMOS RESOLVER HOJE?
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
+            {suggestions.map((s) => (
+              <button key={s} className="grind-ai-suggest" onClick={() => send(s)}>{s}</button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div ref={scrollRef} style={{ overflowY: "auto", flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "24px 0" }}>
+          {messages.map((m, i) => (
+            m.role === "user" ? (
+              <div key={i} style={{ alignSelf: "flex-end", background: "#E8003D", padding: "12px 16px", maxWidth: "70%", fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, color: "#FFFFFF", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                {m.content}
+              </div>
+            ) : (
+              <div key={i} style={{ alignSelf: "flex-start", background: "#111111", border: "1px solid #2A2A2A", padding: 16, maxWidth: "85%", fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: "#A0A0A0", lineHeight: 1.7, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                {m.content}
+              </div>
+            )
+          ))}
+          {loading && (
+            <div style={{ alignSelf: "flex-start", background: "#111111", border: "1px solid #2A2A2A", padding: 16, fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: "#A0A0A0" }}>
+              <span className="grind-ai-dot" />
+              <span className="grind-ai-dot" />
+              <span className="grind-ai-dot" />
+            </div>
+          )}
+          {error && (
+            <div style={{ alignSelf: "flex-start", color: "#E8003D", fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>{error}</div>
+          )}
+        </div>
+      )}
+
+      <div style={{ borderTop: "1px solid #2A2A2A", padding: "16px 0", display: "flex", gap: 12, alignItems: "flex-end" }}>
+        <textarea
+          ref={textRef}
+          rows={1}
+          value={input}
+          onChange={(e) => { setInput(e.target.value); autoResize(e.target); }}
+          onKeyDown={onKeyDown}
+          placeholder="Pergunte algo sobre seu plano, corpo ou progresso..."
+          style={{ background: "#111111", border: "1px solid #2A2A2A", padding: "14px 16px", fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, color: "#FFFFFF", resize: "none", flex: 1, minHeight: 48, maxHeight: 160, outline: "none" }}
+        />
+        <button
+          onClick={() => send(input)}
+          disabled={loading || !input.trim()}
+          aria-label="Enviar"
+          style={{ width: 48, height: 48, background: "#E8003D", border: "none", color: "#FFFFFF", fontSize: 18, cursor: loading || !input.trim() ? "not-allowed" : "pointer", opacity: loading || !input.trim() ? 0.4 : 1, flexShrink: 0 }}
+        >
+          ↑
+        </button>
+      </div>
     </div>
   );
 }
