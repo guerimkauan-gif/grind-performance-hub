@@ -201,21 +201,31 @@ const IconDevice = () => (
     <rect x="6" y="3" width="12" height="18" /><line x1="10" y1="7" x2="14" y2="7" /><circle cx="12" cy="17" r="1" />
   </svg>
 );
-const IconGrindAI = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555555" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M16 4c-3.3 0-6 2.5-6 5.7 0 1 .3 1.9.7 2.7l-2.7 2.7v2.4h2.4v2.1h2.6v2.4h3v-3.6c2.6-.7 4.5-3 4.5-5.7C20.5 6.5 17.8 4 16 4z" />
-    <circle cx="13" cy="8" r="0.9" fill="#555555" />
-    <circle cx="17" cy="8.5" r="0.9" fill="#555555" />
-    <circle cx="14.5" cy="11.5" r="0.9" fill="#555555" />
-    <circle cx="17.5" cy="12" r="0.9" fill="#555555" />
-    <line x1="13" y1="8" x2="17" y2="8.5" />
-    <line x1="13" y1="8" x2="14.5" y2="11.5" />
-    <line x1="17" y1="8.5" x2="17.5" y2="12" />
-    <line x1="14.5" y1="11.5" x2="17.5" y2="12" />
+const IconGrindAI = ({ stroke = "#555555", size = 18 }: { stroke?: string; size?: number } = {}) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    {/* head silhouette (profile facing right) */}
+    <path d="M18.5 20.5v-3c1.8-1 3-2.9 3-5.1 0-3.6-3.2-6.4-7-6.4-3.5 0-6.4 2.4-6.9 5.5L6 14.5l1.6 1v2.2h2v2.8" />
+    {/* neural network nodes */}
+    <circle cx="11" cy="10" r="0.9" fill={stroke} stroke="none" />
+    <circle cx="14.5" cy="9.2" r="0.9" fill={stroke} stroke="none" />
+    <circle cx="17.5" cy="10.5" r="0.9" fill={stroke} stroke="none" />
+    <circle cx="12.5" cy="13" r="0.9" fill={stroke} stroke="none" />
+    <circle cx="16" cy="13" r="0.9" fill={stroke} stroke="none" />
+    <circle cx="14" cy="16" r="0.9" fill={stroke} stroke="none" />
+    {/* connections */}
+    <line x1="11" y1="10" x2="14.5" y2="9.2" />
+    <line x1="14.5" y1="9.2" x2="17.5" y2="10.5" />
+    <line x1="11" y1="10" x2="12.5" y2="13" />
+    <line x1="14.5" y1="9.2" x2="12.5" y2="13" />
+    <line x1="14.5" y1="9.2" x2="16" y2="13" />
+    <line x1="17.5" y1="10.5" x2="16" y2="13" />
+    <line x1="12.5" y1="13" x2="16" y2="13" />
+    <line x1="12.5" y1="13" x2="14" y2="16" />
+    <line x1="16" y1="13" x2="14" y2="16" />
   </svg>
 );
 const ICONS: Record<SectionKey, () => React.ReactElement> = {
-  HOJE: IconSun, CORPO: IconPulse, PROGRESSO: IconBars, "CALENDÁRIO": IconCalendar, TAREFAS: IconChecklist, "CHECK-IN": IconMoon, DISPOSITIVOS: IconDevice, OBJETIVO: IconTarget, "GRIND AI": IconGrindAI,
+  HOJE: IconSun, CORPO: IconPulse, PROGRESSO: IconBars, "CALENDÁRIO": IconCalendar, TAREFAS: IconChecklist, "CHECK-IN": IconMoon, DISPOSITIVOS: IconDevice, OBJETIVO: IconTarget, "GRIND AI": () => <IconGrindAI />,
 };
 
 type Profile = {
@@ -1996,19 +2006,7 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
 
       {messages.length === 0 ? (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1, gap: 24, padding: 24 }}>
-          <div style={{ transform: "scale(2.66)" }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8003D" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M16 4c-3.3 0-6 2.5-6 5.7 0 1 .3 1.9.7 2.7l-2.7 2.7v2.4h2.4v2.1h2.6v2.4h3v-3.6c2.6-.7 4.5-3 4.5-5.7C20.5 6.5 17.8 4 16 4z" />
-              <circle cx="13" cy="8" r="0.9" fill="#E8003D" />
-              <circle cx="17" cy="8.5" r="0.9" fill="#E8003D" />
-              <circle cx="14.5" cy="11.5" r="0.9" fill="#E8003D" />
-              <circle cx="17.5" cy="12" r="0.9" fill="#E8003D" />
-              <line x1="13" y1="8" x2="17" y2="8.5" />
-              <line x1="13" y1="8" x2="14.5" y2="11.5" />
-              <line x1="17" y1="8.5" x2="17.5" y2="12" />
-              <line x1="14.5" y1="11.5" x2="17.5" y2="12" />
-            </svg>
-          </div>
+          <IconGrindAI stroke="#E8003D" size={48} />
           <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: "clamp(24px, 4vw, 36px)", color: "#FFFFFF", letterSpacing: "0.05em", margin: 0, textAlign: "center" }}>
             {greeting}, {firstName}.
           </h1>
