@@ -2006,19 +2006,7 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
 
       {messages.length === 0 ? (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1, gap: 24, padding: 24 }}>
-          <div style={{ transform: "scale(2.66)" }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8003D" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M16 4c-3.3 0-6 2.5-6 5.7 0 1 .3 1.9.7 2.7l-2.7 2.7v2.4h2.4v2.1h2.6v2.4h3v-3.6c2.6-.7 4.5-3 4.5-5.7C20.5 6.5 17.8 4 16 4z" />
-              <circle cx="13" cy="8" r="0.9" fill="#E8003D" />
-              <circle cx="17" cy="8.5" r="0.9" fill="#E8003D" />
-              <circle cx="14.5" cy="11.5" r="0.9" fill="#E8003D" />
-              <circle cx="17.5" cy="12" r="0.9" fill="#E8003D" />
-              <line x1="13" y1="8" x2="17" y2="8.5" />
-              <line x1="13" y1="8" x2="14.5" y2="11.5" />
-              <line x1="17" y1="8.5" x2="17.5" y2="12" />
-              <line x1="14.5" y1="11.5" x2="17.5" y2="12" />
-            </svg>
-          </div>
+          <IconGrindAI stroke="#E8003D" size={48} />
           <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: "clamp(24px, 4vw, 36px)", color: "#FFFFFF", letterSpacing: "0.05em", margin: 0, textAlign: "center" }}>
             {greeting}, {firstName}.
           </h1>
