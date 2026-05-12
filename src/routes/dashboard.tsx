@@ -201,8 +201,21 @@ const IconDevice = () => (
     <rect x="6" y="3" width="12" height="18" /><line x1="10" y1="7" x2="14" y2="7" /><circle cx="12" cy="17" r="1" />
   </svg>
 );
+const IconGrindAI = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555555" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M16 4c-3.3 0-6 2.5-6 5.7 0 1 .3 1.9.7 2.7l-2.7 2.7v2.4h2.4v2.1h2.6v2.4h3v-3.6c2.6-.7 4.5-3 4.5-5.7C20.5 6.5 17.8 4 16 4z" />
+    <circle cx="13" cy="8" r="0.9" fill="#555555" />
+    <circle cx="17" cy="8.5" r="0.9" fill="#555555" />
+    <circle cx="14.5" cy="11.5" r="0.9" fill="#555555" />
+    <circle cx="17.5" cy="12" r="0.9" fill="#555555" />
+    <line x1="13" y1="8" x2="17" y2="8.5" />
+    <line x1="13" y1="8" x2="14.5" y2="11.5" />
+    <line x1="17" y1="8.5" x2="17.5" y2="12" />
+    <line x1="14.5" y1="11.5" x2="17.5" y2="12" />
+  </svg>
+);
 const ICONS: Record<SectionKey, () => React.ReactElement> = {
-  HOJE: IconSun, CORPO: IconPulse, PROGRESSO: IconBars, "CALENDÁRIO": IconCalendar, TAREFAS: IconChecklist, "CHECK-IN": IconMoon, DISPOSITIVOS: IconDevice, OBJETIVO: IconTarget,
+  HOJE: IconSun, CORPO: IconPulse, PROGRESSO: IconBars, "CALENDÁRIO": IconCalendar, TAREFAS: IconChecklist, "CHECK-IN": IconMoon, DISPOSITIVOS: IconDevice, OBJETIVO: IconTarget, "GRIND AI": IconGrindAI,
 };
 
 type Profile = {
