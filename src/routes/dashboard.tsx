@@ -332,6 +332,7 @@ function DashboardPage() {
         {section === "CHECK-IN" && <SectionCheckin />}
         {section === "DISPOSITIVOS" && <SectionDispositivos />}
         {section === "OBJETIVO" && <SectionObjetivo profile={profile} userId={session?.user.id} onSaved={(p) => setProfile((cur) => cur ? { ...cur, ...p } : cur)} />}
+        {section === "GRIND AI" && <SectionGrindAI profile={profile} userId={session?.user.id} userEmail={session?.user.email ?? null} userMeta={session?.user.user_metadata ?? null} />}
       </main>
     </div>
   );
