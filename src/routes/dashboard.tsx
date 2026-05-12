@@ -277,11 +277,21 @@ function DashboardPage() {
         </div>
 
         <nav className="grind-tabs-desktop">
-          {SECTIONS.map((s) => (
-            <button key={s} className={`grind-tab ${section === s ? "active" : ""}`} onClick={() => setSection(s)}>
-              {s}
-            </button>
-          ))}
+          {SECTIONS.map((s) => {
+            const isAi = s === "GRIND AI";
+            const Icon = ICONS[s];
+            return (
+              <button
+                key={s}
+                className={`grind-tab ${section === s ? "active" : ""}`}
+                onClick={() => setSection(s)}
+                title={isAi ? "GRIND AI" : undefined}
+                style={isAi ? { padding: "0 16px", display: "inline-flex", alignItems: "center", justifyContent: "center" } : undefined}
+              >
+                {isAi ? <Icon /> : s}
+              </button>
+            );
+          })}
         </nav>
 
         <button onClick={logout} className="dash-logout" style={{ height: 32, padding: "0 14px", background: "transparent", border: "1px solid #2A2A2A", color: "#A0A0A0", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", fontFamily: "'Space Grotesk', sans-serif", cursor: "pointer", transition: "border-color 0.15s, color 0.15s" }}>
