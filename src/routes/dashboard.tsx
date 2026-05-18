@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { GrindLogo } from "@/components/GrindLogo";
@@ -12,6 +13,26 @@ export const Route = createFileRoute("/dashboard")({
 
 type SectionKey = "HOJE" | "CORPO" | "PROGRESSO" | "CALENDÁRIO" | "TAREFAS" | "CHECK-IN" | "DISPOSITIVOS" | "OBJETIVO" | "GRIND AI";
 const SECTIONS: SectionKey[] = ["HOJE", "CORPO", "PROGRESSO", "CALENDÁRIO", "TAREFAS", "CHECK-IN", "DISPOSITIVOS", "OBJETIVO", "GRIND AI"];
+
+const pageVariants = {
+  initial: (dir: number) => ({ x: dir > 0 ? 72 : -72, opacity: 0 }),
+  animate: {
+    x: 0,
+    opacity: 1,
+    transition: {
+      x: { type: "spring" as const, stiffness: 280, damping: 26, mass: 0.8 },
+      opacity: { duration: 0.18, ease: "easeOut" as const },
+    },
+  },
+  exit: (dir: number) => ({
+    x: dir > 0 ? -72 : 72,
+    opacity: 0,
+    transition: {
+      x: { type: "spring" as const, stiffness: 280, damping: 26, mass: 0.8 },
+      opacity: { duration: 0.14, ease: "easeIn" as const },
+    },
+  }),
+};
 
 const LABEL: React.CSSProperties = {
   fontSize: 11,
@@ -281,22 +302,16 @@ function DashboardPage() {
     navigate({ to: "/login" });
   };
 
-  // Slide transition state
-  const [displaySection, setDisplaySection] = useState<SectionKey>(section);
-  const [pending, setPending] = useState<{ to: SectionKey; dir: 1 | -1 } | null>(null);
-  const isTransitioning = pending !== null;
+  // Slide direction tracking (Framer Motion)
+  const currentIndex = SECTIONS.indexOf(section);
+  const prevIndexRef = useRef(currentIndex);
+  const direction: 1 | -1 = currentIndex >= prevIndexRef.current ? 1 : -1;
+  useEffect(() => { prevIndexRef.current = currentIndex; }, [currentIndex]);
 
   const goSection = (s: SectionKey) => {
     setDrawerOpen(false);
-    if (isTransitioning) return;
     if (s === section) return;
-    const dir: 1 | -1 = SECTIONS.indexOf(s) > SECTIONS.indexOf(section) ? 1 : -1;
     setSection(s);
-    setPending({ to: s, dir });
-    window.setTimeout(() => {
-      setDisplaySection(s);
-      setPending(null);
-    }, 340);
   };
 
   const renderSection = (s: SectionKey) => {
@@ -329,7 +344,7 @@ function DashboardPage() {
           <GrindLogo size={22} letterSpacing="0.15em" />
         </div>
 
-        <nav className={`grind-tabs-desktop ${isTransitioning ? "grind-nav-locked" : ""}`}>
+        <nav className="grind-tabs-desktop">
           {SECTIONS.map((s) => {
             const isAi = s === "GRIND AI";
             const Icon = ICONS[s];
@@ -377,27 +392,20 @@ function DashboardPage() {
 
       {/* Main */}
       <main className="grind-main" style={{ maxWidth: 1280, margin: "0 auto", padding: 32 }}>
-        <div className={`grind-page-stage ${isTransitioning ? "is-transitioning" : ""}`}>
-          {isTransitioning && pending ? (
-            <>
-              <div
-                key={`out-${displaySection}`}
-                className={`grind-page ${pending.dir === 1 ? "grind-page-out-to-left" : "grind-page-out-to-right"}`}
-              >
-                {renderSection(displaySection)}
-              </div>
-              <div
-                key={`in-${pending.to}`}
-                className={`grind-page ${pending.dir === 1 ? "grind-page-in-from-right" : "grind-page-in-from-left"}`}
-              >
-                {renderSection(pending.to)}
-              </div>
-            </>
-          ) : (
-            <div key={`stable-${displaySection}`} className="grind-page">
-              {renderSection(displaySection)}
-            </div>
-          )}
+        <div style={{ position: "relative", overflow: "hidden", minHeight: "60vh" }}>
+          <AnimatePresence mode="wait" custom={direction} initial={false}>
+            <motion.div
+              key={section}
+              custom={direction}
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              style={{ width: "100%" }}
+            >
+              {renderSection(section)}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </main>
     </div>
