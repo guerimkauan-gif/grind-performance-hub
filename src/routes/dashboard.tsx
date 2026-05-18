@@ -308,6 +308,19 @@ function DashboardPage() {
   const direction: 1 | -1 = currentIndex >= prevIndexRef.current ? 1 : -1;
   useEffect(() => { prevIndexRef.current = currentIndex; }, [currentIndex]);
 
+  // Animated active-tab indicator
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number }>({ left: 0, width: 0 });
+  useEffect(() => {
+    const measure = () => {
+      const el = tabRefs.current[currentIndex];
+      if (el) setIndicatorStyle({ left: el.offsetLeft, width: el.offsetWidth });
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [currentIndex]);
+
   const goSection = (s: SectionKey) => {
     setDrawerOpen(false);
     if (s === section) return;
