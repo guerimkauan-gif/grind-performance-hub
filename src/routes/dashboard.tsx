@@ -2584,3 +2584,347 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
 
   );
 }
+
+/* ====================== USER MENU ITEM ====================== */
+function UserMenuItem({ icon, label, onClick, danger }: { icon: React.ReactNode; label: string; onClick: () => void; danger?: boolean }) {
+  const [hover, setHover] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        width: "100%", display: "flex", alignItems: "center", gap: 10,
+        padding: "10px 16px", fontSize: 13, fontFamily: "'Space Grotesk', sans-serif",
+        background: hover ? "#1A1A24" : "transparent",
+        color: danger ? "#FF2D55" : (hover ? "#FFFFFF" : "#CCCCCC"),
+        border: "none", textAlign: "left", cursor: "pointer", transition: "background 150ms, color 150ms",
+      }}
+    >
+      <span style={{ display: "inline-flex", color: danger ? "#FF2D55" : undefined }}>{icon}</span>
+      <span>{label}</span>
+    </button>
+  );
+}
+
+/* ====================== PERFIL ====================== */
+function SectionPerfil({ profile, userId, userEmail, onSaved, onNavigate, onLogout }: {
+  profile: Profile | null;
+  userId: string | undefined;
+  userEmail: string | null;
+  onSaved: (p: Partial<Profile>) => void;
+  onNavigate: (s: SectionKey) => void;
+  onLogout: () => void;
+}) {
+  const [displayName, setDisplayName] = useState(profile?.display_name ?? "");
+  const [savingName, setSavingName] = useState(false);
+  const [savedName, setSavedName] = useState(false);
+
+  const [agentTone, setAgentTone] = useState(profile?.agent_tone ?? "coach_direto");
+  const [agentFocus, setAgentFocus] = useState(profile?.agent_focus ?? "equilibrio");
+  const [morningSummary, setMorningSummary] = useState(profile?.morning_summary ?? true);
+  const [proactiveAlerts, setProactiveAlerts] = useState(profile?.proactive_alerts ?? true);
+  const [savingPrefs, setSavingPrefs] = useState(false);
+  const [savedPrefs, setSavedPrefs] = useState(false);
+
+  const [resetMsg, setResetMsg] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteErr, setDeleteErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    setDisplayName(profile?.display_name ?? "");
+    setAgentTone(profile?.agent_tone ?? "coach_direto");
+    setAgentFocus(profile?.agent_focus ?? "equilibrio");
+    setMorningSummary(profile?.morning_summary ?? true);
+    setProactiveAlerts(profile?.proactive_alerts ?? true);
+  }, [profile]);
+
+  const initial = (displayName?.trim()?.[0] || userEmail?.[0] || "U").toUpperCase();
+
+  const saveName = async () => {
+    if (!userId) return;
+    setSavingName(true);
+    const payload = { display_name: displayName.trim() || null };
+    const { error } = await supabase.from("profiles").update(payload).eq("id", userId);
+    setSavingName(false);
+    if (!error) {
+      onSaved(payload);
+      setSavedName(true);
+      setTimeout(() => setSavedName(false), 1800);
+    }
+  };
+
+  const savePrefs = async () => {
+    if (!userId) return;
+    setSavingPrefs(true);
+    const payload = {
+      agent_tone: agentTone,
+      agent_focus: agentFocus,
+      morning_summary: morningSummary,
+      proactive_alerts: proactiveAlerts,
+    };
+    const { error } = await supabase.from("profiles").update(payload).eq("id", userId);
+    setSavingPrefs(false);
+    if (!error) {
+      onSaved(payload);
+      setSavedPrefs(true);
+      setTimeout(() => setSavedPrefs(false), 1800);
+    }
+  };
+
+  const sendReset = async () => {
+    if (!userEmail) return;
+    setResetMsg(null);
+    const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setResetMsg(error ? `Erro: ${error.message}` : "Email enviado. Verifique sua caixa de entrada.");
+  };
+
+  const deleteAccount = async () => {
+    if (!userId) return;
+    setDeleting(true);
+    setDeleteErr(null);
+    // Delete profile row (auth.users row requires service role; cascade via app-level cleanup)
+    const { error } = await supabase.from("profiles").delete().eq("id", userId);
+    if (error) {
+      setDeleteErr(error.message);
+      setDeleting(false);
+      return;
+    }
+    await supabase.auth.signOut();
+    onLogout();
+  };
+
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const deadlineDate = profile?.deadline ? new Date(profile.deadline) : null;
+  const startDate = profile?.created_at ? new Date(profile.created_at) : null;
+  const totalDays = startDate && deadlineDate ? Math.max(1, Math.ceil((deadlineDate.getTime() - startDate.getTime()) / 86400000)) : 1;
+  const elapsedDays = startDate ? Math.max(0, Math.ceil((today.getTime() - startDate.getTime()) / 86400000)) : 0;
+  const elapsedPct = Math.min(100, Math.round((elapsedDays / totalDays) * 100));
+
+  const card: React.CSSProperties = {
+    background: "#0A0A0F",
+    border: "1px solid rgba(255,255,255,0.06)",
+    borderRadius: 4,
+    padding: 24,
+    marginBottom: 16,
+  };
+  const cardTitle: React.CSSProperties = {
+    fontSize: 10,
+    letterSpacing: "0.12em",
+    textTransform: "uppercase",
+    color: "#FF2D55",
+    marginBottom: 20,
+    fontFamily: "'Space Grotesk', sans-serif",
+  };
+  const fieldLabel: React.CSSProperties = {
+    fontSize: 10,
+    letterSpacing: "0.12em",
+    textTransform: "uppercase",
+    color: "#777",
+    marginBottom: 6,
+    fontFamily: "'Space Grotesk', sans-serif",
+  };
+  const inputStyle: React.CSSProperties = {
+    background: "#111118",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: 3,
+    color: "#F0F0F5",
+    padding: "10px 14px",
+    fontSize: 13,
+    width: "100%",
+    outline: "none",
+    fontFamily: "'Space Grotesk', sans-serif",
+  };
+  const btnPrimary: React.CSSProperties = {
+    background: "#FF2D55",
+    color: "#FFFFFF",
+    border: "none",
+    padding: "10px 18px",
+    fontSize: 11,
+    letterSpacing: "0.12em",
+    textTransform: "uppercase",
+    cursor: "pointer",
+    fontFamily: "'Space Grotesk', sans-serif",
+    transition: "background 150ms",
+  };
+
+  const Toggle = ({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) => (
+    <button
+      type="button"
+      onClick={() => onChange(!on)}
+      style={{
+        width: 40, height: 22, borderRadius: 999,
+        background: on ? "#FF2D55" : "#2A2A35",
+        border: "none", cursor: "pointer", position: "relative",
+        transition: "background 200ms",
+      }}
+    >
+      <span style={{
+        position: "absolute", top: 3, left: on ? 21 : 3,
+        width: 16, height: 16, background: "#FFFFFF", borderRadius: "50%",
+        transition: "left 200ms",
+      }} />
+    </button>
+  );
+
+  return (
+    <div style={{ maxWidth: 680, margin: "0 auto", padding: "40px 24px" }}>
+      <div style={{ marginBottom: 24 }}>
+        <SectionLabel>PERFIL · PERSONALIZAR</SectionLabel>
+      </div>
+
+      {/* Identidade */}
+      <div style={card}>
+        <div style={cardTitle}>IDENTIDADE</div>
+        <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap" }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: "50%",
+            background: "linear-gradient(135deg, #FF2D55, #B71B3A)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 24, fontWeight: 600, color: "#FFFFFF", fontFamily: "'Space Grotesk', sans-serif",
+            flexShrink: 0,
+          }}>
+            {initial}
+          </div>
+          <div style={{ flex: 1, minWidth: 220, display: "grid", gap: 14 }}>
+            <div>
+              <div style={fieldLabel}>Nome de exibição</div>
+              <input
+                style={inputStyle}
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="Como devemos te chamar?"
+                onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(255,45,85,0.5)")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)")}
+              />
+            </div>
+            <div>
+              <div style={fieldLabel}>Email</div>
+              <input style={{ ...inputStyle, color: "#777", cursor: "not-allowed" }} value={userEmail ?? ""} readOnly />
+            </div>
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <button onClick={saveName} disabled={savingName} style={{ ...btnPrimary, opacity: savingName ? 0.6 : 1 }}>
+                {savingName ? "SALVANDO…" : "SALVAR ALTERAÇÕES"}
+              </button>
+              {savedName && <span style={{ fontSize: 11, color: "#4ade80", letterSpacing: "0.1em" }}>SALVO</span>}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Agente · Preferências */}
+      <div style={card}>
+        <div style={cardTitle}>AGENTE · PREFERÊNCIAS</div>
+        <div style={{ display: "grid", gap: 16 }}>
+          <div>
+            <div style={fieldLabel}>Tom do agente</div>
+            <select style={inputStyle} value={agentTone} onChange={(e) => setAgentTone(e.target.value)}>
+              <option value="coach_direto">Coach direto</option>
+              <option value="consultor_empatico">Consultor empático</option>
+              <option value="analitico_tecnico">Analítico técnico</option>
+            </select>
+          </div>
+          <div>
+            <div style={fieldLabel}>Foco principal</div>
+            <select style={inputStyle} value={agentFocus} onChange={(e) => setAgentFocus(e.target.value)}>
+              <option value="sono">Sono</option>
+              <option value="treino">Treino</option>
+              <option value="produtividade">Produtividade</option>
+              <option value="equilibrio">Equilíbrio</option>
+            </select>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0" }}>
+            <div>
+              <div style={{ fontSize: 13, color: "#F0F0F5", fontFamily: "'Space Grotesk', sans-serif" }}>Resumo matinal automático</div>
+              <div style={{ fontSize: 11, color: "#666", marginTop: 2 }}>Receba um briefing do dia ao acordar.</div>
+            </div>
+            <Toggle on={morningSummary} onChange={setMorningSummary} />
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0" }}>
+            <div>
+              <div style={{ fontSize: 13, color: "#F0F0F5", fontFamily: "'Space Grotesk', sans-serif" }}>Alertas proativos do agente</div>
+              <div style={{ fontSize: 11, color: "#666", marginTop: 2 }}>O agente intervém quando detecta desvios.</div>
+            </div>
+            <Toggle on={proactiveAlerts} onChange={setProactiveAlerts} />
+          </div>
+          <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 4 }}>
+            <button onClick={savePrefs} disabled={savingPrefs} style={{ ...btnPrimary, opacity: savingPrefs ? 0.6 : 1 }}>
+              {savingPrefs ? "SALVANDO…" : "SALVAR PREFERÊNCIAS"}
+            </button>
+            {savedPrefs && <span style={{ fontSize: 11, color: "#4ade80", letterSpacing: "0.1em" }}>SALVO</span>}
+          </div>
+        </div>
+      </div>
+
+      {/* Objetivo */}
+      <div style={card}>
+        <div style={cardTitle}>OBJETIVO · RESUMO</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, marginBottom: 14 }}>
+          <div style={{ flex: 1 }}>
+            <div style={fieldLabel}>Meta ativa</div>
+            <div style={{ fontSize: 15, color: "#F0F0F5", fontFamily: "'Space Grotesk', sans-serif" }}>
+              {(profile?.goal_name && profile.goal_name.trim()) || profile?.dream || "—"}
+            </div>
+            <div style={{ fontSize: 11, color: "#777", marginTop: 6, letterSpacing: "0.1em" }}>
+              PRAZO · {formatDeadline(profile?.deadline)}
+            </div>
+          </div>
+          <button onClick={() => onNavigate("OBJETIVO")} style={{ background: "transparent", border: "none", color: "#FF2D55", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer", fontFamily: "'Space Grotesk', sans-serif" }}>
+            EDITAR →
+          </button>
+        </div>
+        <div style={{ height: 3, background: "rgba(255,255,255,0.05)", borderRadius: 0, overflow: "hidden" }}>
+          <div style={{ width: `${elapsedPct}%`, height: "100%", background: "#FF2D55", transition: "width 600ms ease-out" }} />
+        </div>
+        <div style={{ fontSize: 10, color: "#666", marginTop: 6, letterSpacing: "0.1em" }}>{elapsedPct}% DO PRAZO TRANSCORRIDO</div>
+      </div>
+
+      {/* Conta */}
+      <div style={card}>
+        <div style={cardTitle}>CONTA</div>
+        <div style={{ display: "grid", gap: 14 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <div>
+              <div style={{ fontSize: 13, color: "#F0F0F5", fontFamily: "'Space Grotesk', sans-serif" }}>Alterar senha</div>
+              <div style={{ fontSize: 11, color: "#666", marginTop: 2 }}>Enviaremos um link de redefinição para o seu email.</div>
+            </div>
+            <button onClick={sendReset} style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.12)", color: "#F0F0F5", padding: "8px 14px", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer", fontFamily: "'Space Grotesk', sans-serif" }}>
+              ENVIAR LINK
+            </button>
+          </div>
+          {resetMsg && <div style={{ fontSize: 11, color: "#A0A0A0" }}>{resetMsg}</div>}
+
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 14 }}>
+            {!confirmDelete ? (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <div>
+                  <div style={{ fontSize: 13, color: "#FF2D55", fontFamily: "'Space Grotesk', sans-serif" }}>Excluir conta</div>
+                  <div style={{ fontSize: 11, color: "#666", marginTop: 2 }}>Esta ação é permanente.</div>
+                </div>
+                <button onClick={() => setConfirmDelete(true)} style={{ background: "transparent", border: "1px solid rgba(255,45,85,0.4)", color: "#FF2D55", padding: "8px 14px", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer", fontFamily: "'Space Grotesk', sans-serif" }}>
+                  EXCLUIR
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gap: 10 }}>
+                <div style={{ fontSize: 12, color: "#F0F0F5" }}>Tem certeza? Esta ação não pode ser desfeita.</div>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button onClick={deleteAccount} disabled={deleting} style={{ background: "#FF2D55", color: "#FFFFFF", border: "none", padding: "8px 14px", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer", fontFamily: "'Space Grotesk', sans-serif", opacity: deleting ? 0.6 : 1 }}>
+                    {deleting ? "EXCLUINDO…" : "CONFIRMAR EXCLUSÃO"}
+                  </button>
+                  <button onClick={() => setConfirmDelete(false)} style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.12)", color: "#A0A0A0", padding: "8px 14px", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer", fontFamily: "'Space Grotesk', sans-serif" }}>
+                    CANCELAR
+                  </button>
+                </div>
+                {deleteErr && <div style={{ fontSize: 11, color: "#FF2D55" }}>{deleteErr}</div>}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
