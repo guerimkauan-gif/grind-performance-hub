@@ -2224,15 +2224,27 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
 
   return (
     <div style={{ display: "flex", width: "100%", height: "calc(100vh - 120px)", overflow: "hidden" }}>
-      {/* SIDEBAR FIXA — HISTÓRICO */}
-      <aside
-        className="grind-ai-no-scrollbar"
+      {/* SIDEBAR COLAPSÁVEL — HISTÓRICO */}
+      <motion.aside
+        animate={{ width: historyOpen ? 260 : 0 }}
+        initial={false}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
         style={{
-          width: 260, minWidth: 260, height: "100%",
-          background: "#0D0D12", borderRight: "1px solid #1A1A24",
-          display: "flex", flexDirection: "column", overflow: "hidden",
+          height: "100%",
+          background: "transparent",
+          borderRight: historyOpen ? "1px solid rgba(255,255,255,0.08)" : "1px solid transparent",
+          overflow: "hidden",
+          flexShrink: 0,
         }}
       >
+        <motion.div
+          animate={{ opacity: historyOpen ? 1 : 0 }}
+          initial={false}
+          transition={{ duration: 0.2, delay: historyOpen ? 0.15 : 0 }}
+          className="grind-ai-no-scrollbar"
+          style={{ width: 260, height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}
+        >
+
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", height: 52, borderBottom: "1px solid #1A1A24", flexShrink: 0 }}>
           <span style={{ fontSize: 11, color: "#888", textTransform: "uppercase", letterSpacing: "0.2em", fontFamily: "'Space Grotesk', sans-serif" }}>HISTÓRICO</span>
@@ -2320,10 +2332,30 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
         <div style={{ padding: "12px 16px", borderTop: "1px solid #1A1A24", fontSize: 10, color: "#444", textTransform: "uppercase", letterSpacing: "0.15em", fontFamily: "'JetBrains Mono', monospace", flexShrink: 0 }}>
           {conversations.length} {conversations.length === 1 ? "conversa salva" : "conversas salvas"}
         </div>
-      </aside>
+        </motion.div>
+      </motion.aside>
 
       {/* MAIN — área do chat */}
-      <main style={{ flex: 1, height: "100%", display: "flex", flexDirection: "column", overflow: "hidden", background: "#000000", padding: "0 24px" }}>
+      <main style={{ flex: 1, height: "100%", display: "flex", flexDirection: "column", overflow: "hidden", background: "transparent", padding: "0 24px", position: "relative" }}>
+        {/* Toggle relógio — abre/fecha histórico */}
+        <button
+          onClick={() => setHistoryOpen((v) => !v)}
+          aria-label="Histórico"
+          title="Histórico"
+          style={{
+            position: "absolute", top: 8, left: 8, zIndex: 5,
+            background: "transparent", border: "none", padding: 6,
+            color: "#FFFFFF", opacity: historyOpen ? 1 : 0.5,
+            cursor: "pointer", transition: "opacity 200ms",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square">
+            <circle cx="12" cy="12" r="9" />
+            <polyline points="12 7 12 12 15 14" />
+          </svg>
+        </button>
+
 
 
 
