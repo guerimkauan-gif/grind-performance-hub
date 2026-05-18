@@ -281,7 +281,38 @@ function DashboardPage() {
     navigate({ to: "/login" });
   };
 
-  const goSection = (s: SectionKey) => { setSection(s); setDrawerOpen(false); };
+  // Slide transition state
+  const [displaySection, setDisplaySection] = useState<SectionKey>(section);
+  const [pending, setPending] = useState<{ to: SectionKey; dir: 1 | -1 } | null>(null);
+  const isTransitioning = pending !== null;
+
+  const goSection = (s: SectionKey) => {
+    setDrawerOpen(false);
+    if (isTransitioning) return;
+    if (s === section) return;
+    const dir: 1 | -1 = SECTIONS.indexOf(s) > SECTIONS.indexOf(section) ? 1 : -1;
+    setSection(s);
+    setPending({ to: s, dir });
+    window.setTimeout(() => {
+      setDisplaySection(s);
+      setPending(null);
+    }, 340);
+  };
+
+  const renderSection = (s: SectionKey) => {
+    switch (s) {
+      case "HOJE": return <SectionHoje />;
+      case "CORPO": return <SectionCorpo onNavigate={goSection} />;
+      case "PROGRESSO": return <SectionProgresso />;
+      case "CALENDÁRIO": return <SectionCalendario />;
+      case "TAREFAS": return <SectionTarefas />;
+      case "CHECK-IN": return <SectionCheckin />;
+      case "DISPOSITIVOS": return <SectionDispositivos />;
+      case "OBJETIVO": return <SectionObjetivo profile={profile} userId={session?.user.id} onSaved={(p) => setProfile((cur) => cur ? { ...cur, ...p } : cur)} />;
+      case "GRIND AI": return <SectionGrindAI profile={profile} userId={session?.user.id} userEmail={session?.user.email ?? null} userMeta={session?.user.user_metadata ?? null} />;
+      default: return null;
+    }
+  };
 
   if (loading || !session || !profile) return <AuthLoader />;
 
