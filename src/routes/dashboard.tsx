@@ -1991,16 +1991,113 @@ function ScaleLabels({ labels, active }: { labels: string[]; active: number }) {
 }
 
 /* ====================== GRIND AI ====================== */
+type ChatMessage = { role: "user" | "assistant"; content: string };
+type ConversationRow = { id: string; title: string; updated_at: string };
+
+function buildTitleFromText(text: string): string {
+  const cleaned = text.replace(/\s+/g, " ").trim();
+  if (cleaned.length <= 40) return cleaned || "Nova conversa";
+  return cleaned.slice(0, 39).trimEnd() + "…";
+}
+
+function formatHistoryTimestamp(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  const sameDay = d.toDateString() === now.toDateString();
+  const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+  const isYesterday = d.toDateString() === yesterday.toDateString();
+  const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
+  if (sameDay) return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+  if (isYesterday) return "Ontem";
+  if (diffDays < 7) {
+    const days = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+    return days[d.getDay()];
+  }
+  const months = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+  return `${String(d.getDate()).padStart(2,"0")} ${months[d.getMonth()]}`;
+}
+
+function groupConversations(rows: ConversationRow[]) {
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const startOfYesterday = startOfToday - 86400000;
+  const startOfWeek = startOfToday - 6 * 86400000;
+  const groups: { label: string; items: ConversationRow[] }[] = [
+    { label: "HOJE", items: [] },
+    { label: "ONTEM", items: [] },
+    { label: "ESTA SEMANA", items: [] },
+    { label: "MAIS ANTIGAS", items: [] },
+  ];
+  for (const r of rows) {
+    const t = new Date(r.updated_at).getTime();
+    if (t >= startOfToday) groups[0].items.push(r);
+    else if (t >= startOfYesterday) groups[1].items.push(r);
+    else if (t >= startOfWeek) groups[2].items.push(r);
+    else groups[3].items.push(r);
+  }
+  return groups.filter((g) => g.items.length > 0);
+}
+
 function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
   profile: Profile | null;
   userId: string | undefined;
   userEmail: string | null;
   userMeta: Record<string, any> | null;
 }) {
-  const [messages, setMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [conversations, setConversations] = useState<ConversationRow[]>([]);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [loadingConversation, setLoadingConversation] = useState(false);
+
+  const refreshConversations = React.useCallback(async () => {
+    if (!userId) return;
+    const { data } = await supabase
+      .from("conversations")
+      .select("id,title,updated_at")
+      .eq("user_id", userId)
+      .order("updated_at", { ascending: false });
+    if (data) setConversations(data as ConversationRow[]);
+  }, [userId]);
+
+  useEffect(() => { refreshConversations(); }, [refreshConversations]);
+
+  const openConversation = async (id: string) => {
+    if (id === conversationId) { setHistoryOpen(false); return; }
+    setLoadingConversation(true);
+    setHistoryOpen(false);
+    const { data } = await supabase
+      .from("messages")
+      .select("role,content")
+      .eq("conversation_id", id)
+      .order("created_at", { ascending: true });
+    setConversationId(id);
+    setMessages((data ?? []).map((m: any) => ({ role: m.role, content: m.content })));
+    setError(null);
+    setLoadingConversation(false);
+  };
+
+  const startNewConversation = () => {
+    setConversationId(null);
+    setMessages([]);
+    setError(null);
+    setInput("");
+    setHistoryOpen(false);
+  };
+
+  const deleteConversation = async (id: string) => {
+    await supabase.from("conversations").delete().eq("id", id);
+    setConversations((cs) => cs.filter((c) => c.id !== id));
+    setConfirmDeleteId(null);
+    if (id === conversationId) {
+      setConversationId(null);
+      setMessages([]);
+    }
+  };
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "BOM DIA" : hour < 18 ? "BOA TARDE" : "BOA NOITE";
