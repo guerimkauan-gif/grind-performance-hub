@@ -14,6 +14,26 @@ export const Route = createFileRoute("/dashboard")({
 type SectionKey = "HOJE" | "CORPO" | "PROGRESSO" | "CALENDÁRIO" | "TAREFAS" | "CHECK-IN" | "DISPOSITIVOS" | "OBJETIVO" | "GRIND AI";
 const SECTIONS: SectionKey[] = ["HOJE", "CORPO", "PROGRESSO", "CALENDÁRIO", "TAREFAS", "CHECK-IN", "DISPOSITIVOS", "OBJETIVO", "GRIND AI"];
 
+const pageVariants = {
+  initial: (dir: number) => ({ x: dir > 0 ? 72 : -72, opacity: 0 }),
+  animate: {
+    x: 0,
+    opacity: 1,
+    transition: {
+      x: { type: "spring" as const, stiffness: 280, damping: 26, mass: 0.8 },
+      opacity: { duration: 0.18, ease: "easeOut" as const },
+    },
+  },
+  exit: (dir: number) => ({
+    x: dir > 0 ? -72 : 72,
+    opacity: 0,
+    transition: {
+      x: { type: "spring" as const, stiffness: 280, damping: 26, mass: 0.8 },
+      opacity: { duration: 0.14, ease: "easeIn" as const },
+    },
+  }),
+};
+
 const LABEL: React.CSSProperties = {
   fontSize: 11,
   textTransform: "uppercase",
