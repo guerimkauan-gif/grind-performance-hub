@@ -1991,16 +1991,113 @@ function ScaleLabels({ labels, active }: { labels: string[]; active: number }) {
 }
 
 /* ====================== GRIND AI ====================== */
+type ChatMessage = { role: "user" | "assistant"; content: string };
+type ConversationRow = { id: string; title: string; updated_at: string };
+
+function buildTitleFromText(text: string): string {
+  const cleaned = text.replace(/\s+/g, " ").trim();
+  if (cleaned.length <= 40) return cleaned || "Nova conversa";
+  return cleaned.slice(0, 39).trimEnd() + "…";
+}
+
+function formatHistoryTimestamp(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  const sameDay = d.toDateString() === now.toDateString();
+  const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+  const isYesterday = d.toDateString() === yesterday.toDateString();
+  const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
+  if (sameDay) return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+  if (isYesterday) return "Ontem";
+  if (diffDays < 7) {
+    const days = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+    return days[d.getDay()];
+  }
+  const months = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+  return `${String(d.getDate()).padStart(2,"0")} ${months[d.getMonth()]}`;
+}
+
+function groupConversations(rows: ConversationRow[]) {
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const startOfYesterday = startOfToday - 86400000;
+  const startOfWeek = startOfToday - 6 * 86400000;
+  const groups: { label: string; items: ConversationRow[] }[] = [
+    { label: "HOJE", items: [] },
+    { label: "ONTEM", items: [] },
+    { label: "ESTA SEMANA", items: [] },
+    { label: "MAIS ANTIGAS", items: [] },
+  ];
+  for (const r of rows) {
+    const t = new Date(r.updated_at).getTime();
+    if (t >= startOfToday) groups[0].items.push(r);
+    else if (t >= startOfYesterday) groups[1].items.push(r);
+    else if (t >= startOfWeek) groups[2].items.push(r);
+    else groups[3].items.push(r);
+  }
+  return groups.filter((g) => g.items.length > 0);
+}
+
 function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
   profile: Profile | null;
   userId: string | undefined;
   userEmail: string | null;
   userMeta: Record<string, any> | null;
 }) {
-  const [messages, setMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [conversations, setConversations] = useState<ConversationRow[]>([]);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [, setLoadingConversation] = useState(false);
+
+  const refreshConversations = React.useCallback(async () => {
+    if (!userId) return;
+    const { data } = await supabase
+      .from("conversations")
+      .select("id,title,updated_at")
+      .eq("user_id", userId)
+      .order("updated_at", { ascending: false });
+    if (data) setConversations(data as ConversationRow[]);
+  }, [userId]);
+
+  useEffect(() => { refreshConversations(); }, [refreshConversations]);
+
+  const openConversation = async (id: string) => {
+    if (id === conversationId) { setHistoryOpen(false); return; }
+    setLoadingConversation(true);
+    setHistoryOpen(false);
+    const { data } = await supabase
+      .from("messages")
+      .select("role,content")
+      .eq("conversation_id", id)
+      .order("created_at", { ascending: true });
+    setConversationId(id);
+    setMessages((data ?? []).map((m: any) => ({ role: m.role, content: m.content })));
+    setError(null);
+    setLoadingConversation(false);
+  };
+
+  const startNewConversation = () => {
+    setConversationId(null);
+    setMessages([]);
+    setError(null);
+    setInput("");
+    setHistoryOpen(false);
+  };
+
+  const deleteConversation = async (id: string) => {
+    await supabase.from("conversations").delete().eq("id", id);
+    setConversations((cs) => cs.filter((c) => c.id !== id));
+    setConfirmDeleteId(null);
+    if (id === conversationId) {
+      setConversationId(null);
+      setMessages([]);
+    }
+  };
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "BOM DIA" : hour < 18 ? "BOA TARDE" : "BOA NOITE";
@@ -2027,13 +2124,36 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
 
   const send = async (text: string) => {
     const trimmed = text.trim();
-    if (!trimmed || loading) return;
+    if (!trimmed || loading || !userId) return;
     setError(null);
     const newMessages = [...messages, { role: "user" as const, content: trimmed }];
     setMessages(newMessages);
     setInput("");
     if (textRef.current) { textRef.current.style.height = "auto"; }
     setLoading(true);
+
+    // Ensure a conversation exists (create on first message)
+    let convId = conversationId;
+    try {
+      if (!convId) {
+        const { data: created, error: convErr } = await supabase
+          .from("conversations")
+          .insert({ user_id: userId, title: buildTitleFromText(trimmed) })
+          .select("id")
+          .single();
+        if (convErr) throw convErr;
+        convId = created!.id as string;
+        setConversationId(convId);
+      }
+      // Persist the user message immediately
+      await supabase.from("messages").insert({
+        conversation_id: convId,
+        role: "user",
+        content: trimmed,
+      });
+    } catch (e) {
+      console.error("Failed to persist user message", e);
+    }
 
     const context = {
       recovery: 87,
@@ -2054,7 +2174,16 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
       });
       if (fnErr) throw fnErr;
       const reply: string = (data as any)?.reply ?? "";
-      setMessages((m) => [...m, { role: "assistant", content: reply || "—" }]);
+      const replyContent = reply || "—";
+      setMessages((m) => [...m, { role: "assistant", content: replyContent }]);
+      if (convId) {
+        await supabase.from("messages").insert({
+          conversation_id: convId,
+          role: "assistant",
+          content: replyContent,
+        });
+      }
+      refreshConversations();
     } catch (e: any) {
       console.error(e);
       setError("Falha ao consultar o GRIND AI. Tente novamente.");
@@ -2094,7 +2223,149 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
   const canSend = !loading && !!input.trim();
 
   return (
-    <div style={{ maxWidth: 800, margin: "0 auto", display: "flex", flexDirection: "column", height: "calc(100vh - 120px)", gap: 0 }}>
+    <div style={{ position: "relative", maxWidth: 800, margin: "0 auto", display: "flex", flexDirection: "column", height: "calc(100vh - 120px)", gap: 0, overflow: "hidden" }}>
+      {/* History toggle button — top-left, discreet */}
+      <button
+        onClick={() => setHistoryOpen(true)}
+        aria-label="Histórico"
+        title="Histórico"
+        style={{
+          position: "absolute", top: 8, left: 0, zIndex: 5,
+          background: "transparent", border: "1px solid #2A2A2A", color: "#A0A0A0",
+          width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: "pointer", transition: "color 150ms, border-color 150ms",
+        }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "#FFFFFF"; (e.currentTarget as HTMLButtonElement).style.borderColor = "#FFFFFF"; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "#A0A0A0"; (e.currentTarget as HTMLButtonElement).style.borderColor = "#2A2A2A"; }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square">
+          <circle cx="12" cy="12" r="9" />
+          <polyline points="12 7 12 12 15 14" />
+        </svg>
+      </button>
+
+      {/* History drawer + overlay (scoped to chat area) */}
+      <AnimatePresence>
+        {historyOpen && (
+          <>
+            <motion.div
+              key="hist-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              onClick={() => setHistoryOpen(false)}
+              style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 20 }}
+            />
+            <motion.div
+              key="hist-panel"
+              initial={{ x: -280 }}
+              animate={{ x: 0 }}
+              exit={{ x: -280 }}
+              transition={{ type: "spring", stiffness: 280, damping: 26 }}
+              className="grind-ai-no-scrollbar"
+              style={{
+                position: "absolute", top: 0, left: 0, bottom: 0, width: 280,
+                background: "#0D0D12", borderRight: "1px solid #1E1E2E",
+                zIndex: 30, display: "flex", flexDirection: "column",
+              }}
+            >
+              {/* Header */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: "1px solid #1E1E2E" }}>
+                <span style={{ fontSize: 11, color: "#888", textTransform: "uppercase", letterSpacing: "0.2em", fontFamily: "'Space Grotesk', sans-serif" }}>HISTÓRICO</span>
+                <button
+                  onClick={startNewConversation}
+                  aria-label="Nova conversa"
+                  title="Nova conversa"
+                  style={{ background: "transparent", border: "1px solid #1E1E2E", color: "#A0A0A0", width: 28, height: 28, fontSize: 18, lineHeight: "24px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "#FFFFFF"; (e.currentTarget as HTMLButtonElement).style.borderColor = "#FFFFFF"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "#A0A0A0"; (e.currentTarget as HTMLButtonElement).style.borderColor = "#1E1E2E"; }}
+                >+</button>
+              </div>
+
+              {/* Conversation list grouped */}
+              <div className="grind-ai-no-scrollbar" style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
+                {conversations.length === 0 ? (
+                  <div style={{ padding: "16px 20px", fontSize: 11, color: "#555", fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.1em" }}>
+                    SEM CONVERSAS AINDA
+                  </div>
+                ) : (
+                  groupConversations(conversations).map((group, gi) => (
+                    <div key={group.label} style={{ marginBottom: 12 }}>
+                      <div style={{ padding: "8px 20px 4px", fontSize: 10, color: "#666", textTransform: "uppercase", letterSpacing: "0.18em", fontFamily: "'Space Grotesk', sans-serif" }}>
+                        {group.label}
+                      </div>
+                      {group.items.map((c, ci) => {
+                        const isActive = c.id === conversationId;
+                        const isConfirming = confirmDeleteId === c.id;
+                        return (
+                          <motion.div
+                            key={c.id}
+                            initial={{ opacity: 0, x: -8 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: (gi * 0.04) + ci * 0.03, duration: 0.18 }}
+                            className="grind-ai-hist-row"
+                            onClick={() => !isConfirming && openConversation(c.id)}
+                            style={{
+                              position: "relative",
+                              display: "flex", alignItems: "center", gap: 8,
+                              padding: "10px 20px",
+                              cursor: isConfirming ? "default" : "pointer",
+                              background: isActive ? "#14141C" : "transparent",
+                              borderLeft: isActive ? "2px solid #FF2D55" : "2px solid transparent",
+                              transition: "background 150ms",
+                            }}
+                            onMouseEnter={(e) => { if (!isActive && !isConfirming) (e.currentTarget as HTMLDivElement).style.background = "#1A1A24"; }}
+                            onMouseLeave={(e) => { if (!isActive && !isConfirming) (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
+                          >
+                            {isConfirming ? (
+                              <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, fontSize: 11, color: "#A0A0A0", fontFamily: "'Space Grotesk', sans-serif" }}>
+                                <span>Excluir?</span>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); deleteConversation(c.id); }}
+                                  style={{ background: "transparent", border: "1px solid #FF2D55", color: "#FF2D55", padding: "2px 8px", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", cursor: "pointer" }}
+                                >Sim</button>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null); }}
+                                  style={{ background: "transparent", border: "1px solid #2A2A2A", color: "#A0A0A0", padding: "2px 8px", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", cursor: "pointer" }}
+                                >Não</button>
+                              </div>
+                            ) : (
+                              <>
+                                <div style={{ flex: 1, minWidth: 0, fontSize: 13, color: isActive ? "#FFFFFF" : "#C0C0C0", fontFamily: "'Space Grotesk', sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  {c.title}
+                                </div>
+                                <div style={{ fontSize: 10, color: "#666", fontFamily: "'JetBrains Mono', monospace", flexShrink: 0 }}>
+                                  {formatHistoryTimestamp(c.updated_at)}
+                                </div>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(c.id); }}
+                                  aria-label="Apagar"
+                                  className="grind-ai-del-btn"
+                                  style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "#0D0D12", border: "none", color: "#666", padding: 4, cursor: "pointer", opacity: 0, transition: "opacity 150ms, color 150ms" }}
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6M14 11v6" /></svg>
+                                </button>
+                              </>
+                            )}
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Footer */}
+              <div style={{ padding: "12px 20px", borderTop: "1px solid #1E1E2E", fontSize: 10, color: "#555", textTransform: "uppercase", letterSpacing: "0.15em", fontFamily: "'JetBrains Mono', monospace" }}>
+                {conversations.length} {conversations.length === 1 ? "conversa salva" : "conversas salvas"}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+
       <style>{`
         @keyframes grind-ai-blink { 0%, 80%, 100% { opacity: 0.3; } 40% { opacity: 1; } }
         @keyframes grind-ai-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
@@ -2140,6 +2411,9 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
         .grind-ai-textarea { resize: none; overflow-y: auto; }
         .grind-ai-textarea::-webkit-scrollbar { display: none; width: 0; height: 0; }
         .grind-ai-textarea::-webkit-resizer { display: none; }
+        .grind-ai-hist-row:hover .grind-ai-del-btn { opacity: 1; }
+        .grind-ai-del-btn:hover { color: #FF2D55 !important; }
+        .grind-ai-msg-fadein { animation: grind-ai-cross 250ms ease-out both; }
       `}</style>
 
       <div className="grind-ai-section" style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
@@ -2171,7 +2445,7 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
           </div>
         </div>
       ) : (
-        <div ref={scrollRef} className="grind-ai-no-scrollbar" style={{ overflowY: "auto", flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "24px 0" }}>
+        <div ref={scrollRef} key={conversationId ?? "new"} className="grind-ai-no-scrollbar grind-ai-msg-fadein" style={{ overflowY: "auto", flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "24px 0" }}>
           {messages.map((m, i) => (
             m.role === "user" ? (
               <div key={i} className="grind-ai-msg-user" style={{ alignSelf: "flex-end", background: "#E8003D", padding: "12px 16px", maxWidth: "70%", fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, color: "#FFFFFF", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
