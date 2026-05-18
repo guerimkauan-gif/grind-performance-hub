@@ -2124,13 +2124,36 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
 
   const send = async (text: string) => {
     const trimmed = text.trim();
-    if (!trimmed || loading) return;
+    if (!trimmed || loading || !userId) return;
     setError(null);
     const newMessages = [...messages, { role: "user" as const, content: trimmed }];
     setMessages(newMessages);
     setInput("");
     if (textRef.current) { textRef.current.style.height = "auto"; }
     setLoading(true);
+
+    // Ensure a conversation exists (create on first message)
+    let convId = conversationId;
+    try {
+      if (!convId) {
+        const { data: created, error: convErr } = await supabase
+          .from("conversations")
+          .insert({ user_id: userId, title: buildTitleFromText(trimmed) })
+          .select("id")
+          .single();
+        if (convErr) throw convErr;
+        convId = created!.id as string;
+        setConversationId(convId);
+      }
+      // Persist the user message immediately
+      await supabase.from("messages").insert({
+        conversation_id: convId,
+        role: "user",
+        content: trimmed,
+      });
+    } catch (e) {
+      console.error("Failed to persist user message", e);
+    }
 
     const context = {
       recovery: 87,
@@ -2151,7 +2174,16 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
       });
       if (fnErr) throw fnErr;
       const reply: string = (data as any)?.reply ?? "";
-      setMessages((m) => [...m, { role: "assistant", content: reply || "—" }]);
+      const replyContent = reply || "—";
+      setMessages((m) => [...m, { role: "assistant", content: replyContent }]);
+      if (convId) {
+        await supabase.from("messages").insert({
+          conversation_id: convId,
+          role: "assistant",
+          content: replyContent,
+        });
+      }
+      refreshConversations();
     } catch (e: any) {
       console.error(e);
       setError("Falha ao consultar o GRIND AI. Tente novamente.");
