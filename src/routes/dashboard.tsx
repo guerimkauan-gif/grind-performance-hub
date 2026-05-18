@@ -11,8 +11,9 @@ export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
 });
 
-type SectionKey = "HOJE" | "CORPO" | "PROGRESSO" | "CALENDÁRIO" | "TAREFAS" | "CHECK-IN" | "DISPOSITIVOS" | "OBJETIVO" | "GRIND AI";
-const SECTIONS: SectionKey[] = ["HOJE", "CORPO", "PROGRESSO", "CALENDÁRIO", "TAREFAS", "CHECK-IN", "DISPOSITIVOS", "OBJETIVO", "GRIND AI"];
+type SectionKey = "HOJE" | "CORPO" | "PROGRESSO" | "CALENDÁRIO" | "TAREFAS" | "CHECK-IN" | "DISPOSITIVOS" | "OBJETIVO" | "GRIND AI" | "PERFIL";
+const SECTIONS: SectionKey[] = ["HOJE", "CORPO", "PROGRESSO", "CALENDÁRIO", "TAREFAS", "CHECK-IN", "DISPOSITIVOS", "OBJETIVO", "GRIND AI", "PERFIL"];
+const DESKTOP_SECTIONS: SectionKey[] = ["HOJE", "CORPO", "PROGRESSO", "CALENDÁRIO", "TAREFAS", "CHECK-IN", "OBJETIVO", "GRIND AI"];
 
 const pageVariants = {
   initial: (dir: number) => ({ x: dir > 0 ? 72 : -72, opacity: 0 }),
