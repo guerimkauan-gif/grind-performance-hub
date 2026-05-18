@@ -2304,6 +2304,7 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
                             initial={{ opacity: 0, x: -8 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: (gi * 0.04) + ci * 0.03, duration: 0.18 }}
+                            className="grind-ai-hist-row"
                             onClick={() => !isConfirming && openConversation(c.id)}
                             style={{
                               position: "relative",
