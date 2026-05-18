@@ -329,7 +329,7 @@ function DashboardPage() {
           <GrindLogo size={22} letterSpacing="0.15em" />
         </div>
 
-        <nav className="grind-tabs-desktop">
+        <nav className={`grind-tabs-desktop ${isTransitioning ? "grind-nav-locked" : ""}`}>
           {SECTIONS.map((s) => {
             const isAi = s === "GRIND AI";
             const Icon = ICONS[s];
@@ -337,7 +337,7 @@ function DashboardPage() {
               <button
                 key={s}
                 className={`grind-tab ${section === s ? "active" : ""}`}
-                onClick={() => setSection(s)}
+                onClick={() => goSection(s)}
                 title={isAi ? "GRIND AI" : undefined}
                 style={isAi ? { padding: "0 16px", display: "inline-flex", alignItems: "center", justifyContent: "center" } : undefined}
               >
