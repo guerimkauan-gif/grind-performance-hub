@@ -475,7 +475,7 @@ function DashboardPage() {
               <GrindLogo size={22} letterSpacing="0.15em" />
             </div>
             <div style={{ height: 1, background: "#2A2A2A" }} />
-            {SECTIONS.map((s) => {
+            {SECTIONS.filter((s) => s !== "PERFIL").map((s) => {
               const Icon = ICONS[s];
               const active = section === s;
               return (
