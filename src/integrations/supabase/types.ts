@@ -131,40 +131,55 @@ export type Database = {
       }
       profiles: {
         Row: {
+          agent_focus: string
+          agent_tone: string
           created_at: string
           daily_hours: number | null
           days_per_week: number | null
           deadline: string | null
+          display_name: string | null
           dream: string | null
           goal_name: string | null
           id: string
+          morning_summary: boolean
           onboarding_complete: boolean
+          proactive_alerts: boolean
           whoop_access_token: string | null
           whoop_refresh_token: string | null
           whoop_token_expires_at: string | null
         }
         Insert: {
+          agent_focus?: string
+          agent_tone?: string
           created_at?: string
           daily_hours?: number | null
           days_per_week?: number | null
           deadline?: string | null
+          display_name?: string | null
           dream?: string | null
           goal_name?: string | null
           id: string
+          morning_summary?: boolean
           onboarding_complete?: boolean
+          proactive_alerts?: boolean
           whoop_access_token?: string | null
           whoop_refresh_token?: string | null
           whoop_token_expires_at?: string | null
         }
         Update: {
+          agent_focus?: string
+          agent_tone?: string
           created_at?: string
           daily_hours?: number | null
           days_per_week?: number | null
           deadline?: string | null
+          display_name?: string | null
           dream?: string | null
           goal_name?: string | null
           id?: string
+          morning_summary?: boolean
           onboarding_complete?: boolean
+          proactive_alerts?: boolean
           whoop_access_token?: string | null
           whoop_refresh_token?: string | null
           whoop_token_expires_at?: string | null
