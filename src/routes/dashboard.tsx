@@ -2183,6 +2183,8 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
   const greeting = hour < 12 ? "BOM DIA" : hour < 18 ? "BOA TARDE" : "BOA NOITE";
 
   const firstName = (() => {
+    const dn = profile?.display_name?.trim();
+    if (dn) return dn.split(/\s+/)[0].toUpperCase();
     const meta = userMeta || {};
     const fromMeta: string | undefined = meta.full_name || meta.name || meta.first_name;
     if (fromMeta && typeof fromMeta === "string") return fromMeta.trim().split(/\s+/)[0].toUpperCase();
