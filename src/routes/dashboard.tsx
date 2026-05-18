@@ -2410,8 +2410,9 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
         .grind-ai-textarea { resize: none; overflow-y: auto; }
         .grind-ai-textarea::-webkit-scrollbar { display: none; width: 0; height: 0; }
         .grind-ai-textarea::-webkit-resizer { display: none; }
-        .grind-ai-no-scrollbar:hover .grind-ai-del-btn { opacity: 1; }
+        .grind-ai-hist-row:hover .grind-ai-del-btn { opacity: 1; }
         .grind-ai-del-btn:hover { color: #FF2D55 !important; }
+        .grind-ai-msg-fadein { animation: grind-ai-cross 250ms ease-out both; }
       `}</style>
 
       <div className="grind-ai-section" style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
