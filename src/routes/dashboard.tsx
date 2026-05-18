@@ -376,16 +376,29 @@ function DashboardPage() {
       )}
 
       {/* Main */}
-      <main key={section} className="grind-fade-in grind-main" style={{ maxWidth: 1280, margin: "0 auto", padding: 32 }}>
-        {section === "HOJE" && <SectionHoje />}
-        {section === "CORPO" && <SectionCorpo onNavigate={setSection} />}
-        {section === "PROGRESSO" && <SectionProgresso />}
-        {section === "CALENDÁRIO" && <SectionCalendario />}
-        {section === "TAREFAS" && <SectionTarefas />}
-        {section === "CHECK-IN" && <SectionCheckin />}
-        {section === "DISPOSITIVOS" && <SectionDispositivos />}
-        {section === "OBJETIVO" && <SectionObjetivo profile={profile} userId={session?.user.id} onSaved={(p) => setProfile((cur) => cur ? { ...cur, ...p } : cur)} />}
-        {section === "GRIND AI" && <SectionGrindAI profile={profile} userId={session?.user.id} userEmail={session?.user.email ?? null} userMeta={session?.user.user_metadata ?? null} />}
+      <main className="grind-main" style={{ maxWidth: 1280, margin: "0 auto", padding: 32 }}>
+        <div className={`grind-page-stage ${isTransitioning ? "is-transitioning" : ""}`}>
+          {isTransitioning && pending ? (
+            <>
+              <div
+                key={`out-${displaySection}`}
+                className={`grind-page ${pending.dir === 1 ? "grind-page-out-to-left" : "grind-page-out-to-right"}`}
+              >
+                {renderSection(displaySection)}
+              </div>
+              <div
+                key={`in-${pending.to}`}
+                className={`grind-page ${pending.dir === 1 ? "grind-page-in-from-right" : "grind-page-in-from-left"}`}
+              >
+                {renderSection(pending.to)}
+              </div>
+            </>
+          ) : (
+            <div key={`stable-${displaySection}`} className="grind-page">
+              {renderSection(displaySection)}
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );
