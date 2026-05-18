@@ -2216,7 +2216,8 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
             onBlur={() => setInputFocused(false)}
             onKeyDown={onKeyDown}
             placeholder={placeholders[phIdx]}
-            style={{ background: "#111111", border: "1px solid #2A2A2A", padding: "14px 16px", fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, color: "#FFFFFF", resize: "none", width: "100%", minHeight: 48, maxHeight: 160, outline: "none" }}
+            className="grind-ai-textarea grind-ai-no-scrollbar"
+            style={{ background: "#111111", border: "1px solid #2A2A2A", padding: "14px 16px", fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, lineHeight: 1.5, color: "#FFFFFF", resize: "none", width: "100%", minHeight: 48, maxHeight: 200, outline: "none", boxSizing: "border-box", overflowY: "auto" }}
           />
           <span className={`grind-ai-input-underline${inputFocused ? " active" : ""}`} aria-hidden />
         </div>
