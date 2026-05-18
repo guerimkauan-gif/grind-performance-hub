@@ -51,6 +51,18 @@ const DASH_STYLES = `
 .grind-ring-arc { animation: grind-ring-draw 1.2s ease-out forwards; }
 .grind-bar-fill { animation: grind-bar-fill 0.8s ease-out forwards; }
 .grind-fade-in { animation: grind-fade-in 150ms ease-out; }
+@keyframes grind-slide-out-left { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-60px); opacity: 0; } }
+@keyframes grind-slide-out-right { from { transform: translateX(0); opacity: 1; } to { transform: translateX(60px); opacity: 0; } }
+@keyframes grind-slide-in-from-right { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes grind-slide-in-from-left { from { transform: translateX(-60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.grind-page-stage { position: relative; }
+.grind-page-stage.is-transitioning { overflow: hidden; }
+.grind-page-stage.is-transitioning > .grind-page { position: absolute; top: 0; left: 0; right: 0; width: 100%; }
+.grind-page-out-to-left { animation: grind-slide-out-left 280ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+.grind-page-out-to-right { animation: grind-slide-out-right 280ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+.grind-page-in-from-right { animation: grind-slide-in-from-right 320ms cubic-bezier(0.16, 1, 0.3, 1) 60ms both; }
+.grind-page-in-from-left { animation: grind-slide-in-from-left 320ms cubic-bezier(0.16, 1, 0.3, 1) 60ms both; }
+.grind-nav-locked { pointer-events: none; }
 .grind-live-square {
   position: relative; display: inline-block; vertical-align: middle;
   width: 6px; height: 6px; background: #E8003D; border-radius: 0;
@@ -269,7 +281,38 @@ function DashboardPage() {
     navigate({ to: "/login" });
   };
 
-  const goSection = (s: SectionKey) => { setSection(s); setDrawerOpen(false); };
+  // Slide transition state
+  const [displaySection, setDisplaySection] = useState<SectionKey>(section);
+  const [pending, setPending] = useState<{ to: SectionKey; dir: 1 | -1 } | null>(null);
+  const isTransitioning = pending !== null;
+
+  const goSection = (s: SectionKey) => {
+    setDrawerOpen(false);
+    if (isTransitioning) return;
+    if (s === section) return;
+    const dir: 1 | -1 = SECTIONS.indexOf(s) > SECTIONS.indexOf(section) ? 1 : -1;
+    setSection(s);
+    setPending({ to: s, dir });
+    window.setTimeout(() => {
+      setDisplaySection(s);
+      setPending(null);
+    }, 340);
+  };
+
+  const renderSection = (s: SectionKey) => {
+    switch (s) {
+      case "HOJE": return <SectionHoje />;
+      case "CORPO": return <SectionCorpo onNavigate={goSection} />;
+      case "PROGRESSO": return <SectionProgresso />;
+      case "CALENDÁRIO": return <SectionCalendario />;
+      case "TAREFAS": return <SectionTarefas />;
+      case "CHECK-IN": return <SectionCheckin />;
+      case "DISPOSITIVOS": return <SectionDispositivos />;
+      case "OBJETIVO": return <SectionObjetivo profile={profile} userId={session?.user.id} onSaved={(p) => setProfile((cur) => cur ? { ...cur, ...p } : cur)} />;
+      case "GRIND AI": return <SectionGrindAI profile={profile} userId={session?.user.id} userEmail={session?.user.email ?? null} userMeta={session?.user.user_metadata ?? null} />;
+      default: return null;
+    }
+  };
 
   if (loading || !session || !profile) return <AuthLoader />;
 
@@ -286,7 +329,7 @@ function DashboardPage() {
           <GrindLogo size={22} letterSpacing="0.15em" />
         </div>
 
-        <nav className="grind-tabs-desktop">
+        <nav className={`grind-tabs-desktop ${isTransitioning ? "grind-nav-locked" : ""}`}>
           {SECTIONS.map((s) => {
             const isAi = s === "GRIND AI";
             const Icon = ICONS[s];
@@ -294,7 +337,7 @@ function DashboardPage() {
               <button
                 key={s}
                 className={`grind-tab ${section === s ? "active" : ""}`}
-                onClick={() => setSection(s)}
+                onClick={() => goSection(s)}
                 title={isAi ? "GRIND AI" : undefined}
                 style={isAi ? { padding: "0 16px", display: "inline-flex", alignItems: "center", justifyContent: "center" } : undefined}
               >
@@ -333,16 +376,29 @@ function DashboardPage() {
       )}
 
       {/* Main */}
-      <main key={section} className="grind-fade-in grind-main" style={{ maxWidth: 1280, margin: "0 auto", padding: 32 }}>
-        {section === "HOJE" && <SectionHoje />}
-        {section === "CORPO" && <SectionCorpo onNavigate={setSection} />}
-        {section === "PROGRESSO" && <SectionProgresso />}
-        {section === "CALENDÁRIO" && <SectionCalendario />}
-        {section === "TAREFAS" && <SectionTarefas />}
-        {section === "CHECK-IN" && <SectionCheckin />}
-        {section === "DISPOSITIVOS" && <SectionDispositivos />}
-        {section === "OBJETIVO" && <SectionObjetivo profile={profile} userId={session?.user.id} onSaved={(p) => setProfile((cur) => cur ? { ...cur, ...p } : cur)} />}
-        {section === "GRIND AI" && <SectionGrindAI profile={profile} userId={session?.user.id} userEmail={session?.user.email ?? null} userMeta={session?.user.user_metadata ?? null} />}
+      <main className="grind-main" style={{ maxWidth: 1280, margin: "0 auto", padding: 32 }}>
+        <div className={`grind-page-stage ${isTransitioning ? "is-transitioning" : ""}`}>
+          {isTransitioning && pending ? (
+            <>
+              <div
+                key={`out-${displaySection}`}
+                className={`grind-page ${pending.dir === 1 ? "grind-page-out-to-left" : "grind-page-out-to-right"}`}
+              >
+                {renderSection(displaySection)}
+              </div>
+              <div
+                key={`in-${pending.to}`}
+                className={`grind-page ${pending.dir === 1 ? "grind-page-in-from-right" : "grind-page-in-from-left"}`}
+              >
+                {renderSection(pending.to)}
+              </div>
+            </>
+          ) : (
+            <div key={`stable-${displaySection}`} className="grind-page">
+              {renderSection(displaySection)}
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );
