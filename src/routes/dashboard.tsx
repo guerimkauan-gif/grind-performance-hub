@@ -2465,6 +2465,8 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
           <span className="grind-ai-arrow">↑</span>
         </button>
       </div>
+      </main>
     </div>
+
   );
 }
