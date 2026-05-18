@@ -372,27 +372,20 @@ function DashboardPage() {
 
       {/* Main */}
       <main className="grind-main" style={{ maxWidth: 1280, margin: "0 auto", padding: 32 }}>
-        <div className={`grind-page-stage ${isTransitioning ? "is-transitioning" : ""}`}>
-          {isTransitioning && pending ? (
-            <>
-              <div
-                key={`out-${displaySection}`}
-                className={`grind-page ${pending.dir === 1 ? "grind-page-out-to-left" : "grind-page-out-to-right"}`}
-              >
-                {renderSection(displaySection)}
-              </div>
-              <div
-                key={`in-${pending.to}`}
-                className={`grind-page ${pending.dir === 1 ? "grind-page-in-from-right" : "grind-page-in-from-left"}`}
-              >
-                {renderSection(pending.to)}
-              </div>
-            </>
-          ) : (
-            <div key={`stable-${displaySection}`} className="grind-page">
-              {renderSection(displaySection)}
-            </div>
-          )}
+        <div style={{ position: "relative", overflow: "hidden", minHeight: "60vh" }}>
+          <AnimatePresence mode="wait" custom={direction} initial={false}>
+            <motion.div
+              key={section}
+              custom={direction}
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              style={{ width: "100%" }}
+            >
+              {renderSection(section)}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </main>
     </div>
