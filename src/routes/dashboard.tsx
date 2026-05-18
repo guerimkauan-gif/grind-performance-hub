@@ -2135,6 +2135,11 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
         .grind-ai-send:not(:disabled):hover { background: #FF2D55; border-color: #FF2D55; cursor: pointer; }
         .grind-ai-send:not(:disabled):hover .grind-ai-arrow { transform: translateX(2px); }
         .grind-ai-send:disabled { opacity: 0.4; cursor: not-allowed; }
+        .grind-ai-no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+        .grind-ai-no-scrollbar::-webkit-scrollbar { display: none; width: 0; height: 0; }
+        .grind-ai-textarea { resize: none; overflow-y: auto; }
+        .grind-ai-textarea::-webkit-scrollbar { display: none; width: 0; height: 0; }
+        .grind-ai-textarea::-webkit-resizer { display: none; }
       `}</style>
 
       <div className="grind-ai-section" style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
@@ -2166,7 +2171,7 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
           </div>
         </div>
       ) : (
-        <div ref={scrollRef} style={{ overflowY: "auto", flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "24px 0" }}>
+        <div ref={scrollRef} className="grind-ai-no-scrollbar" style={{ overflowY: "auto", flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "24px 0" }}>
           {messages.map((m, i) => (
             m.role === "user" ? (
               <div key={i} className="grind-ai-msg-user" style={{ alignSelf: "flex-end", background: "#E8003D", padding: "12px 16px", maxWidth: "70%", fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, color: "#FFFFFF", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
@@ -2211,7 +2216,8 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
             onBlur={() => setInputFocused(false)}
             onKeyDown={onKeyDown}
             placeholder={placeholders[phIdx]}
-            style={{ background: "#111111", border: "1px solid #2A2A2A", padding: "14px 16px", fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, color: "#FFFFFF", resize: "none", width: "100%", minHeight: 48, maxHeight: 160, outline: "none" }}
+            className="grind-ai-textarea grind-ai-no-scrollbar"
+            style={{ background: "#111111", border: "1px solid #2A2A2A", padding: "14px 16px", fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, lineHeight: 1.5, color: "#FFFFFF", resize: "none", width: "100%", minHeight: 48, maxHeight: 200, outline: "none", boxSizing: "border-box", overflowY: "auto" }}
           />
           <span className={`grind-ai-input-underline${inputFocused ? " active" : ""}`} aria-hidden />
         </div>
