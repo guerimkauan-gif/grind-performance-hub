@@ -116,11 +116,11 @@ const DASH_STYLES = `
   font-family: 'Space Grotesk', sans-serif; font-weight: 400;
   font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em;
   color: #555555; padding: 0 20px; height: 56px; line-height: 56px;
-  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  margin-bottom: -1px;
   transition: color 0.15s;
 }
 .grind-tab:hover { color: #A0A0A0; }
-.grind-tab.active { color: #FFFFFF; border-bottom-color: #E8003D; }
+.grind-tab.active { color: #FFFFFF; }
 .grind-hamburger {
   display: none; flex-direction: column; gap: 4px; background: transparent;
   border: none; cursor: pointer; padding: 8px; margin-right: 8px;
@@ -308,6 +308,19 @@ function DashboardPage() {
   const direction: 1 | -1 = currentIndex >= prevIndexRef.current ? 1 : -1;
   useEffect(() => { prevIndexRef.current = currentIndex; }, [currentIndex]);
 
+  // Animated active-tab indicator
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number }>({ left: 0, width: 0 });
+  useEffect(() => {
+    const measure = () => {
+      const el = tabRefs.current[currentIndex];
+      if (el) setIndicatorStyle({ left: el.offsetLeft, width: el.offsetWidth });
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [currentIndex]);
+
   const goSection = (s: SectionKey) => {
     setDrawerOpen(false);
     if (s === section) return;
@@ -344,13 +357,14 @@ function DashboardPage() {
           <GrindLogo size={22} letterSpacing="0.15em" />
         </div>
 
-        <nav className="grind-tabs-desktop">
-          {SECTIONS.map((s) => {
+        <nav className="grind-tabs-desktop" style={{ position: "relative" }}>
+          {SECTIONS.map((s, i) => {
             const isAi = s === "GRIND AI";
             const Icon = ICONS[s];
             return (
               <button
                 key={s}
+                ref={(el) => { tabRefs.current[i] = el; }}
                 className={`grind-tab ${section === s ? "active" : ""}`}
                 onClick={() => goSection(s)}
                 title={isAi ? "GRIND AI" : undefined}
@@ -360,6 +374,11 @@ function DashboardPage() {
               </button>
             );
           })}
+          <motion.div
+            animate={{ left: indicatorStyle.left, width: indicatorStyle.width, opacity: indicatorStyle.width ? 1 : 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 28, mass: 0.7 }}
+            style={{ position: "absolute", bottom: -1, height: 2, backgroundColor: "#E8003D", borderRadius: 1, pointerEvents: "none" }}
+          />
         </nav>
 
         <button onClick={logout} className="dash-logout" style={{ height: 32, padding: "0 14px", background: "transparent", border: "1px solid #2A2A2A", color: "#A0A0A0", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", fontFamily: "'Space Grotesk', sans-serif", cursor: "pointer", transition: "border-color 0.15s, color 0.15s" }}>
