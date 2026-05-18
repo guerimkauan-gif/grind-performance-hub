@@ -324,7 +324,7 @@ function DashboardPage() {
           <GrindLogo size={22} letterSpacing="0.15em" />
         </div>
 
-        <nav className={`grind-tabs-desktop ${isTransitioning ? "grind-nav-locked" : ""}`}>
+        <nav className="grind-tabs-desktop">
           {SECTIONS.map((s) => {
             const isAi = s === "GRIND AI";
             const Icon = ICONS[s];
