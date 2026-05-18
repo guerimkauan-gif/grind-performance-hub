@@ -378,18 +378,21 @@ function DashboardPage() {
       case "DISPOSITIVOS": return <SectionDispositivos />;
       case "OBJETIVO": return <SectionObjetivo profile={profile} userId={session?.user.id} onSaved={(p) => setProfile((cur) => cur ? { ...cur, ...p } : cur)} />;
       case "GRIND AI": return <SectionGrindAI profile={profile} userId={session?.user.id} userEmail={session?.user.email ?? null} userMeta={session?.user.user_metadata ?? null} />;
+      case "PERFIL": return <SectionPerfil profile={profile} userId={session?.user.id} userEmail={session?.user.email ?? null} onSaved={(p) => setProfile((cur) => cur ? { ...cur, ...p } : cur)} onNavigate={goSection} onLogout={logout} />;
       default: return null;
     }
   };
 
   if (loading || !session || !profile) return <AuthLoader />;
 
+  const userInitial = (profile.display_name?.trim()?.[0] || session.user.email?.[0] || "U").toUpperCase();
+
   return (
     <div style={{ background: "#0A0A0A", minHeight: "100vh", color: "#FFFFFF" }}>
       <style>{DASH_STYLES}</style>
 
       {/* Top bar */}
-      <header className="grind-header" style={{ height: 56, borderBottom: "1px solid #2A2A2A", boxShadow: "0 1px 0 #E8003D20", padding: "0 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, overflow: "hidden" }}>
+      <header className="grind-header" style={{ height: 56, borderBottom: "1px solid #2A2A2A", boxShadow: "0 1px 0 #E8003D20", padding: "0 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, overflow: "visible" }}>
         <div style={{ display: "flex", alignItems: "center" }}>
           <button className="grind-hamburger" aria-label="Menu" onClick={() => setDrawerOpen(true)}>
             <span /><span /><span />
@@ -398,7 +401,7 @@ function DashboardPage() {
         </div>
 
         <nav className="grind-tabs-desktop" style={{ position: "relative" }}>
-          {SECTIONS.map((s, i) => {
+          {DESKTOP_SECTIONS.map((s, i) => {
             const isAi = s === "GRIND AI";
             const Icon = ICONS[s];
             return (
@@ -421,9 +424,46 @@ function DashboardPage() {
           />
         </nav>
 
-        <button onClick={logout} className="dash-logout" style={{ height: 32, padding: "0 14px", background: "transparent", border: "1px solid #2A2A2A", color: "#A0A0A0", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", fontFamily: "'Space Grotesk', sans-serif", cursor: "pointer", transition: "border-color 0.15s, color 0.15s" }}>
-          SAIR
-        </button>
+        <div ref={userMenuRef} style={{ position: "relative" }}>
+          <button
+            onClick={() => setUserMenuOpen((v) => !v)}
+            aria-label="Menu do usuário"
+            style={{
+              width: 36, height: 36, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.12)",
+              background: "linear-gradient(135deg, #FF2D55, #B71B3A)",
+              color: "#FFFFFF", fontSize: 13, fontWeight: 600, fontFamily: "'Space Grotesk', sans-serif",
+              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+              transition: "transform 150ms, box-shadow 150ms",
+              boxShadow: userMenuOpen ? "0 0 0 3px rgba(255,45,85,0.25)" : "none",
+            }}
+          >
+            {userInitial}
+          </button>
+          <AnimatePresence>
+            {userMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
+                style={{
+                  position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 1000,
+                  minWidth: 220, background: "#0F0F14",
+                  border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8,
+                  padding: "6px 0", boxShadow: "0 16px 40px rgba(0,0,0,0.6)",
+                }}
+              >
+                <div style={{ padding: "8px 16px 6px", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "#555", fontFamily: "'Space Grotesk', sans-serif" }}>
+                  PERFIL
+                </div>
+                <UserMenuItem icon={<IconSettings />} label="Personalizar" onClick={() => { setUserMenuOpen(false); goSection("PERFIL"); }} />
+                <UserMenuItem icon={<IconDevice />} label="Dispositivos" onClick={() => { setUserMenuOpen(false); goSection("DISPOSITIVOS"); }} />
+                <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", margin: "4px 0" }} />
+                <UserMenuItem icon={<IconLogout />} label="Sair" danger onClick={() => { setUserMenuOpen(false); logout(); }} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </header>
 
       {/* Mobile drawer */}
