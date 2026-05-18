@@ -282,22 +282,16 @@ function DashboardPage() {
     navigate({ to: "/login" });
   };
 
-  // Slide transition state
-  const [displaySection, setDisplaySection] = useState<SectionKey>(section);
-  const [pending, setPending] = useState<{ to: SectionKey; dir: 1 | -1 } | null>(null);
-  const isTransitioning = pending !== null;
+  // Slide direction tracking (Framer Motion)
+  const currentIndex = SECTIONS.indexOf(section);
+  const prevIndexRef = useRef(currentIndex);
+  const direction: 1 | -1 = currentIndex >= prevIndexRef.current ? 1 : -1;
+  useEffect(() => { prevIndexRef.current = currentIndex; }, [currentIndex]);
 
   const goSection = (s: SectionKey) => {
     setDrawerOpen(false);
-    if (isTransitioning) return;
     if (s === section) return;
-    const dir: 1 | -1 = SECTIONS.indexOf(s) > SECTIONS.indexOf(section) ? 1 : -1;
     setSection(s);
-    setPending({ to: s, dir });
-    window.setTimeout(() => {
-      setDisplaySection(s);
-      setPending(null);
-    }, 340);
   };
 
   const renderSection = (s: SectionKey) => {
