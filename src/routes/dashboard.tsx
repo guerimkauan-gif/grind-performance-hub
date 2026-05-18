@@ -51,6 +51,18 @@ const DASH_STYLES = `
 .grind-ring-arc { animation: grind-ring-draw 1.2s ease-out forwards; }
 .grind-bar-fill { animation: grind-bar-fill 0.8s ease-out forwards; }
 .grind-fade-in { animation: grind-fade-in 150ms ease-out; }
+@keyframes grind-slide-out-left { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-60px); opacity: 0; } }
+@keyframes grind-slide-out-right { from { transform: translateX(0); opacity: 1; } to { transform: translateX(60px); opacity: 0; } }
+@keyframes grind-slide-in-from-right { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes grind-slide-in-from-left { from { transform: translateX(-60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.grind-page-stage { position: relative; }
+.grind-page-stage.is-transitioning { overflow: hidden; }
+.grind-page-stage.is-transitioning > .grind-page { position: absolute; top: 0; left: 0; right: 0; width: 100%; }
+.grind-page-out-to-left { animation: grind-slide-out-left 280ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+.grind-page-out-to-right { animation: grind-slide-out-right 280ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+.grind-page-in-from-right { animation: grind-slide-in-from-right 320ms cubic-bezier(0.16, 1, 0.3, 1) 60ms both; }
+.grind-page-in-from-left { animation: grind-slide-in-from-left 320ms cubic-bezier(0.16, 1, 0.3, 1) 60ms both; }
+.grind-nav-locked { pointer-events: none; }
 .grind-live-square {
   position: relative; display: inline-block; vertical-align: middle;
   width: 6px; height: 6px; background: #E8003D; border-radius: 0;
