@@ -308,11 +308,13 @@ function DashboardPage() {
   useEffect(() => {
     if (loading) return;
     if (!session) { navigate({ to: "/login" }); return; }
-    supabase.from("profiles").select("onboarding_complete,dream,goal_name,daily_hours,days_per_week,deadline,created_at").eq("id", session.user.id).maybeSingle().then(({ data }) => {
+    supabase.from("profiles").select("onboarding_complete,dream,goal_name,daily_hours,days_per_week,deadline,created_at,display_name,agent_tone,agent_focus,morning_summary,proactive_alerts").eq("id", session.user.id).maybeSingle().then(({ data }) => {
       if (!data?.onboarding_complete) { navigate({ to: "/onboarding" }); return; }
       setProfile({
         dream: data.dream, goal_name: data.goal_name, daily_hours: data.daily_hours, days_per_week: data.days_per_week,
         deadline: data.deadline, created_at: data.created_at,
+        display_name: data.display_name, agent_tone: data.agent_tone ?? "coach_direto", agent_focus: data.agent_focus ?? "equilibrio",
+        morning_summary: data.morning_summary ?? true, proactive_alerts: data.proactive_alerts ?? true,
       });
     });
   }, [session, loading, navigate]);
