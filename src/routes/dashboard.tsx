@@ -1980,11 +1980,26 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
     }
   };
 
+  const dynamicChip = hour < 12 ? "MEU PLANO DE HOJE" : hour < 18 ? "COMO FOI MEU TREINO?" : "ANÁLISE DO MEU DIA";
   const suggestions = [
     "COMO ESTÁ MEU CORPO HOJE?",
     "ESTOU NO PRAZO DO MEU OBJETIVO?",
     "O QUE DEVO PRIORIZAR AGORA?",
+    dynamicChip,
   ];
+
+  // Rotating placeholder
+  const placeholders = [
+    "Pergunte algo sobre seu plano, corpo ou progresso...",
+    "Como está minha recuperação hoje?",
+    "Estou treinando na intensidade certa?",
+  ];
+  const [phIdx, setPhIdx] = useState(0);
+  const [inputFocused, setInputFocused] = useState(false);
+  useEffect(() => {
+    const t = setInterval(() => setPhIdx((i) => (i + 1) % placeholders.length), 4500);
+    return () => clearInterval(t);
+  }, [placeholders.length]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -1993,29 +2008,77 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
     }
   };
 
+  const canSend = !loading && !!input.trim();
+
   return (
     <div style={{ maxWidth: 800, margin: "0 auto", display: "flex", flexDirection: "column", height: "calc(100vh - 120px)", gap: 0 }}>
       <style>{`
         @keyframes grind-ai-blink { 0%, 80%, 100% { opacity: 0.3; } 40% { opacity: 1; } }
-        .grind-ai-suggest { background: #111111; border: 1px solid #2A2A2A; padding: 10px 20px; font-family: 'Space Grotesk', sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #A0A0A0; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
-        .grind-ai-suggest:hover { border-color: #E8003D; color: #FFFFFF; }
+        @keyframes grind-ai-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+        @keyframes grind-ai-glow { 0%, 100% { opacity: 0.15; transform: translate(-50%,-50%) scale(1); } 50% { opacity: 0.45; transform: translate(-50%,-50%) scale(1.18); } }
+        @keyframes grind-ai-rise { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes grind-ai-rise-sm { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes grind-ai-fade-line { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes grind-ai-cross { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes grind-ai-underline { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+        .grind-ai-section { animation: grind-ai-cross 200ms ease-out both; }
+
+        .grind-ai-icon-wrap { position: relative; width: 96px; height: 96px; display: flex; align-items: center; justify-content: center; }
+        .grind-ai-icon-glow { position: absolute; top: 50%; left: 50%; width: 140px; height: 140px; border-radius: 50%; background: radial-gradient(circle, #FF2D55 0%, rgba(255,45,85,0) 65%); transform: translate(-50%,-50%); animation: grind-ai-glow 2.8s ease-in-out infinite; pointer-events: none; }
+        .grind-ai-icon-pulse { animation: grind-ai-pulse 2.8s ease-in-out infinite; position: relative; }
+
+        .grind-ai-greet { animation: grind-ai-rise 600ms ease-out both; }
+        .grind-ai-sub { animation: grind-ai-rise 700ms ease-out 200ms both; opacity: 0; }
+        .grind-ai-chips { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+
+        .grind-ai-suggest { background: #111111; border: 1px solid #2A2A2A; padding: 10px 20px; font-family: 'Space Grotesk', sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #A0A0A0; cursor: pointer; transition: border-color 180ms, color 180ms, transform 180ms; animation: grind-ai-rise-sm 420ms ease-out both; opacity: 0; }
+        .grind-ai-suggest:hover { border-color: rgba(255,255,255,0.5); color: #FFFFFF; transform: translateY(-2px); }
+        .grind-ai-suggest:active { transform: scale(0.97); transition: transform 80ms; }
+
         .grind-ai-dot { width: 6px; height: 6px; background: #E8003D; display: inline-block; margin-right: 4px; animation: grind-ai-blink 1.2s infinite both; }
         .grind-ai-dot:nth-child(2) { animation-delay: 0.15s; }
         .grind-ai-dot:nth-child(3) { animation-delay: 0.3s; }
+
+        .grind-ai-msg-user { animation: grind-ai-rise-sm 280ms ease-out both; }
+        .grind-ai-msg-assist-line { animation: grind-ai-fade-line 380ms ease-out both; }
+
+        .grind-ai-input-wrap { position: relative; flex: 1; }
+        .grind-ai-input-underline { position: absolute; left: 0; bottom: 0; height: 1px; width: 100%; background: #E8003D; transform-origin: left center; transform: scaleX(0); transition: transform 300ms ease-out; pointer-events: none; }
+        .grind-ai-input-underline.active { transform: scaleX(1); }
+
+        .grind-ai-send { width: 48px; height: 48px; background: transparent; border: 1px solid #2A2A2A; color: #FFFFFF; font-size: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: background 180ms, border-color 180ms; }
+        .grind-ai-send .grind-ai-arrow { display: inline-block; transition: transform 180ms; }
+        .grind-ai-send:not(:disabled):hover { background: #FF2D55; border-color: #FF2D55; cursor: pointer; }
+        .grind-ai-send:not(:disabled):hover .grind-ai-arrow { transform: translateX(2px); }
+        .grind-ai-send:disabled { opacity: 0.4; cursor: not-allowed; }
       `}</style>
 
+      <div className="grind-ai-section" style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
       {messages.length === 0 ? (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1, gap: 24, padding: 24 }}>
-          <IconGrindAI stroke="#E8003D" size={48} />
-          <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: "clamp(24px, 4vw, 36px)", color: "#FFFFFF", letterSpacing: "0.05em", margin: 0, textAlign: "center" }}>
+          <div className="grind-ai-icon-wrap">
+            <span className="grind-ai-icon-glow" aria-hidden />
+            <span className="grind-ai-icon-pulse">
+              <IconGrindAI stroke="#E8003D" size={48} />
+            </span>
+          </div>
+          <h1 className="grind-ai-greet" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: "clamp(24px, 4vw, 36px)", color: "#FFFFFF", letterSpacing: "0.05em", margin: 0, textAlign: "center" }}>
             {greeting}, {firstName}.
           </h1>
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "#555555", letterSpacing: "0.15em" }}>
+          <div className="grind-ai-sub" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "#555555", letterSpacing: "0.15em" }}>
             O QUE VAMOS RESOLVER HOJE?
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
-            {suggestions.map((s) => (
-              <button key={s} className="grind-ai-suggest" onClick={() => send(s)}>{s}</button>
+          <div className="grind-ai-chips">
+            {suggestions.map((s, idx) => (
+              <button
+                key={s}
+                className="grind-ai-suggest"
+                style={{ animationDelay: `${400 + idx * 100}ms` }}
+                onClick={() => send(s)}
+              >
+                {s}
+              </button>
             ))}
           </div>
         </div>
@@ -2023,12 +2086,20 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
         <div ref={scrollRef} style={{ overflowY: "auto", flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "24px 0" }}>
           {messages.map((m, i) => (
             m.role === "user" ? (
-              <div key={i} style={{ alignSelf: "flex-end", background: "#E8003D", padding: "12px 16px", maxWidth: "70%", fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, color: "#FFFFFF", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+              <div key={i} className="grind-ai-msg-user" style={{ alignSelf: "flex-end", background: "#E8003D", padding: "12px 16px", maxWidth: "70%", fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, color: "#FFFFFF", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
                 {m.content}
               </div>
             ) : (
               <div key={i} style={{ alignSelf: "flex-start", background: "#111111", border: "1px solid #2A2A2A", padding: 16, maxWidth: "85%", fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: "#A0A0A0", lineHeight: 1.7, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-                {m.content}
+                {m.content.split("\n").map((line, li) => (
+                  <div
+                    key={li}
+                    className="grind-ai-msg-assist-line"
+                    style={{ animationDelay: `${li * 80}ms`, minHeight: line ? undefined : "1em" }}
+                  >
+                    {line || "\u00A0"}
+                  </div>
+                ))}
               </div>
             )
           ))}
@@ -2044,24 +2115,30 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
           )}
         </div>
       )}
+      </div>
 
       <div style={{ borderTop: "1px solid #2A2A2A", padding: "16px 0", display: "flex", gap: 12, alignItems: "flex-end" }}>
-        <textarea
-          ref={textRef}
-          rows={1}
-          value={input}
-          onChange={(e) => { setInput(e.target.value); autoResize(e.target); }}
-          onKeyDown={onKeyDown}
-          placeholder="Pergunte algo sobre seu plano, corpo ou progresso..."
-          style={{ background: "#111111", border: "1px solid #2A2A2A", padding: "14px 16px", fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, color: "#FFFFFF", resize: "none", flex: 1, minHeight: 48, maxHeight: 160, outline: "none" }}
-        />
+        <div className="grind-ai-input-wrap">
+          <textarea
+            ref={textRef}
+            rows={1}
+            value={input}
+            onChange={(e) => { setInput(e.target.value); autoResize(e.target); }}
+            onFocus={() => setInputFocused(true)}
+            onBlur={() => setInputFocused(false)}
+            onKeyDown={onKeyDown}
+            placeholder={placeholders[phIdx]}
+            style={{ background: "#111111", border: "1px solid #2A2A2A", padding: "14px 16px", fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, color: "#FFFFFF", resize: "none", width: "100%", minHeight: 48, maxHeight: 160, outline: "none" }}
+          />
+          <span className={`grind-ai-input-underline${inputFocused ? " active" : ""}`} aria-hidden />
+        </div>
         <button
           onClick={() => send(input)}
-          disabled={loading || !input.trim()}
+          disabled={!canSend}
           aria-label="Enviar"
-          style={{ width: 48, height: 48, background: "#E8003D", border: "none", color: "#FFFFFF", fontSize: 18, cursor: loading || !input.trim() ? "not-allowed" : "pointer", opacity: loading || !input.trim() ? 0.4 : 1, flexShrink: 0 }}
+          className="grind-ai-send"
         >
-          ↑
+          <span className="grind-ai-arrow">↑</span>
         </button>
       </div>
     </div>
