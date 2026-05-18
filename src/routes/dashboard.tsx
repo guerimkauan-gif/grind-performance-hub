@@ -334,18 +334,32 @@ function DashboardPage() {
   const direction: 1 | -1 = currentIndex >= prevIndexRef.current ? 1 : -1;
   useEffect(() => { prevIndexRef.current = currentIndex; }, [currentIndex]);
 
-  // Animated active-tab indicator
+  // Animated active-tab indicator (uses DESKTOP_SECTIONS positions)
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const desktopIndex = DESKTOP_SECTIONS.indexOf(section);
   const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number }>({ left: 0, width: 0 });
   useEffect(() => {
     const measure = () => {
-      const el = tabRefs.current[currentIndex];
+      const el = desktopIndex >= 0 ? tabRefs.current[desktopIndex] : null;
       if (el) setIndicatorStyle({ left: el.offsetLeft, width: el.offsetWidth });
+      else setIndicatorStyle({ left: 0, width: 0 });
     };
     measure();
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
-  }, [currentIndex]);
+  }, [desktopIndex]);
+
+  // User dropdown
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) setUserMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [userMenuOpen]);
 
   const goSection = (s: SectionKey) => {
     setDrawerOpen(false);
