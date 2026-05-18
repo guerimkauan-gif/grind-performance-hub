@@ -114,9 +114,9 @@ const DASH_STYLES = `
 .grind-tab {
   background: transparent; border: none; cursor: pointer;
   font-family: 'Space Grotesk', sans-serif; font-weight: 400;
-  font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em;
-  color: #555555; padding: 0 20px; height: 56px; line-height: 56px;
-  margin-bottom: -1px;
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+  color: #555555; padding: 0 10px; height: 56px; line-height: 56px;
+  margin-bottom: -1px; white-space: nowrap;
   transition: color 0.15s;
 }
 .grind-tab:hover { color: #A0A0A0; }
@@ -126,7 +126,10 @@ const DASH_STYLES = `
   border: none; cursor: pointer; padding: 8px; margin-right: 8px;
 }
 .grind-hamburger span { display: block; width: 18px; height: 2px; background: #A0A0A0; }
-.grind-tabs-desktop { display: flex; align-items: center; }
+.grind-tabs-desktop { display: flex; align-items: center; flex-wrap: nowrap; white-space: nowrap; }
+@media (max-width: 1100px) {
+  .grind-tab { padding: 0 7px; letter-spacing: 0.06em; }
+}
 @media (max-width: 767px) {
   .grind-tabs-desktop { display: none !important; }
   .grind-hamburger { display: flex !important; }
