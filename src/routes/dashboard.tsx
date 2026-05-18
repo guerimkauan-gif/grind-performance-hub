@@ -2052,7 +2052,7 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [conversations, setConversations] = useState<ConversationRow[]>([]);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [loadingConversation, setLoadingConversation] = useState(false);
+  const [, setLoadingConversation] = useState(false);
 
   const refreshConversations = React.useCallback(async () => {
     if (!userId) return;
