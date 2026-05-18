@@ -378,7 +378,7 @@ function DashboardPage() {
       case "DISPOSITIVOS": return <SectionDispositivos />;
       case "OBJETIVO": return <SectionObjetivo profile={profile} userId={session?.user.id} onSaved={(p) => setProfile((cur) => cur ? { ...cur, ...p } : cur)} />;
       case "GRIND AI": return <SectionGrindAI profile={profile} userId={session?.user.id} userEmail={session?.user.email ?? null} userMeta={session?.user.user_metadata ?? null} />;
-      case "PERFIL": return <SectionPerfil profile={profile} userId={session?.user.id} userEmail={session?.user.email ?? null} onSaved={(p) => setProfile((cur) => cur ? { ...cur, ...p } : cur)} onNavigate={goSection} onLogout={logout} />;
+      case "PERFIL": return <SectionPerfil profile={profile} userId={session?.user.id} userEmail={session?.user.email ?? null} onSaved={(p: Partial<Profile>) => setProfile((cur) => cur ? { ...cur, ...p } : cur)} onNavigate={goSection} onLogout={logout} />;
       default: return null;
     }
   };
