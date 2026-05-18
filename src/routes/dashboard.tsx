@@ -116,11 +116,11 @@ const DASH_STYLES = `
   font-family: 'Space Grotesk', sans-serif; font-weight: 400;
   font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em;
   color: #555555; padding: 0 20px; height: 56px; line-height: 56px;
-  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  margin-bottom: -1px;
   transition: color 0.15s;
 }
 .grind-tab:hover { color: #A0A0A0; }
-.grind-tab.active { color: #FFFFFF; border-bottom-color: #E8003D; }
+.grind-tab.active { color: #FFFFFF; }
 .grind-hamburger {
   display: none; flex-direction: column; gap: 4px; background: transparent;
   border: none; cursor: pointer; padding: 8px; margin-right: 8px;
