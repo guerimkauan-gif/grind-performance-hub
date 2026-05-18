@@ -2332,10 +2332,30 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
         <div style={{ padding: "12px 16px", borderTop: "1px solid #1A1A24", fontSize: 10, color: "#444", textTransform: "uppercase", letterSpacing: "0.15em", fontFamily: "'JetBrains Mono', monospace", flexShrink: 0 }}>
           {conversations.length} {conversations.length === 1 ? "conversa salva" : "conversas salvas"}
         </div>
-      </aside>
+        </motion.div>
+      </motion.aside>
 
       {/* MAIN — área do chat */}
-      <main style={{ flex: 1, height: "100%", display: "flex", flexDirection: "column", overflow: "hidden", background: "#000000", padding: "0 24px" }}>
+      <main style={{ flex: 1, height: "100%", display: "flex", flexDirection: "column", overflow: "hidden", background: "transparent", padding: "0 24px", position: "relative" }}>
+        {/* Toggle relógio — abre/fecha histórico */}
+        <button
+          onClick={() => setHistoryOpen((v) => !v)}
+          aria-label="Histórico"
+          title="Histórico"
+          style={{
+            position: "absolute", top: 8, left: 8, zIndex: 5,
+            background: "transparent", border: "none", padding: 6,
+            color: "#FFFFFF", opacity: historyOpen ? 1 : 0.5,
+            cursor: "pointer", transition: "opacity 200ms",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square">
+            <circle cx="12" cy="12" r="9" />
+            <polyline points="12 7 12 12 15 14" />
+          </svg>
+        </button>
+
 
 
 
