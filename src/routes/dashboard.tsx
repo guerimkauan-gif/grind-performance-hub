@@ -2445,7 +2445,7 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
           </div>
         </div>
       ) : (
-        <div ref={scrollRef} className="grind-ai-no-scrollbar" style={{ overflowY: "auto", flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "24px 0" }}>
+        <div ref={scrollRef} key={conversationId ?? "new"} className="grind-ai-no-scrollbar grind-ai-msg-fadein" style={{ overflowY: "auto", flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "24px 0" }}>
           {messages.map((m, i) => (
             m.role === "user" ? (
               <div key={i} className="grind-ai-msg-user" style={{ alignSelf: "flex-end", background: "#E8003D", padding: "12px 16px", maxWidth: "70%", fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, color: "#FFFFFF", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
