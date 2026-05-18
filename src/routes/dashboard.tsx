@@ -352,7 +352,7 @@ function DashboardPage() {
       <style>{DASH_STYLES}</style>
 
       {/* Top bar */}
-      <header className="grind-header" style={{ height: 56, borderBottom: "1px solid #2A2A2A", boxShadow: "0 1px 0 #E8003D20", padding: "0 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <header className="grind-header" style={{ height: 56, borderBottom: "1px solid #2A2A2A", boxShadow: "0 1px 0 #E8003D20", padding: "0 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center" }}>
           <button className="grind-hamburger" aria-label="Menu" onClick={() => setDrawerOpen(true)}>
             <span /><span /><span />
