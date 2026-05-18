@@ -2135,6 +2135,11 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
         .grind-ai-send:not(:disabled):hover { background: #FF2D55; border-color: #FF2D55; cursor: pointer; }
         .grind-ai-send:not(:disabled):hover .grind-ai-arrow { transform: translateX(2px); }
         .grind-ai-send:disabled { opacity: 0.4; cursor: not-allowed; }
+        .grind-ai-no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+        .grind-ai-no-scrollbar::-webkit-scrollbar { display: none; width: 0; height: 0; }
+        .grind-ai-textarea { resize: none; overflow-y: auto; }
+        .grind-ai-textarea::-webkit-scrollbar { display: none; width: 0; height: 0; }
+        .grind-ai-textarea::-webkit-resizer { display: none; }
       `}</style>
 
       <div className="grind-ai-section" style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
