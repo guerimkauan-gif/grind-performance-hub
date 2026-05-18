@@ -2224,15 +2224,27 @@ function SectionGrindAI({ profile, userId, userEmail, userMeta }: {
 
   return (
     <div style={{ display: "flex", width: "100%", height: "calc(100vh - 120px)", overflow: "hidden" }}>
-      {/* SIDEBAR FIXA — HISTÓRICO */}
-      <aside
-        className="grind-ai-no-scrollbar"
+      {/* SIDEBAR COLAPSÁVEL — HISTÓRICO */}
+      <motion.aside
+        animate={{ width: historyOpen ? 260 : 0 }}
+        initial={false}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
         style={{
-          width: 260, minWidth: 260, height: "100%",
-          background: "#0D0D12", borderRight: "1px solid #1A1A24",
-          display: "flex", flexDirection: "column", overflow: "hidden",
+          height: "100%",
+          background: "transparent",
+          borderRight: historyOpen ? "1px solid rgba(255,255,255,0.08)" : "1px solid transparent",
+          overflow: "hidden",
+          flexShrink: 0,
         }}
       >
+        <motion.div
+          animate={{ opacity: historyOpen ? 1 : 0 }}
+          initial={false}
+          transition={{ duration: 0.2, delay: historyOpen ? 0.15 : 0 }}
+          className="grind-ai-no-scrollbar"
+          style={{ width: 260, height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}
+        >
+
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", height: 52, borderBottom: "1px solid #1A1A24", flexShrink: 0 }}>
           <span style={{ fontSize: 11, color: "#888", textTransform: "uppercase", letterSpacing: "0.2em", fontFamily: "'Space Grotesk', sans-serif" }}>HISTÓRICO</span>
